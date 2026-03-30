@@ -161,7 +161,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         // ── 임시 키보드 입력 (Input System 연동 전 테스트용) ──
-        HandleTemporaryInput();
+        //HandleTemporaryInput();
 
         // ── 핵심 로직 순서 ──
         CheckGround();

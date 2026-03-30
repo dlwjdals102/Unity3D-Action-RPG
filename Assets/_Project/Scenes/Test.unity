@@ -1634,6 +1634,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 03cc8781c8f46b84da02f194eb53104b, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1362622119}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 03cc8781c8f46b84da02f194eb53104b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1362622122}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 03cc8781c8f46b84da02f194eb53104b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1362622125}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 03cc8781c8f46b84da02f194eb53104b, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1362622124}
   m_SourcePrefab: {fileID: 100100000, guid: 03cc8781c8f46b84da02f194eb53104b, type: 3}
 --- !u!1 &358108895
 GameObject:
@@ -4155,6 +4164,42 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 0.9, z: 0}
+--- !u!114 &1362622122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362622118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 891bca2a86d90214e9628eb096143489, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerInputHandler
+--- !u!114 &1362622124
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362622118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1888f4ad62170ba4eada316c85371622, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerStateMachine
+--- !u!114 &1362622125
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1362622118}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca48665dd46a01145aec0a83dc7809b2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimator
 --- !u!43 &1585419264
 Mesh:
   m_ObjectHideFlags: 0
