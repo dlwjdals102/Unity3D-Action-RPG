@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 
 /// <summary>
 /// Animator 파라미터 제어를 전담하는 브릿지 클래스.
@@ -22,19 +23,19 @@ public class PlayerAnimator : MonoBehaviour
 
     // ── 이벤트 (전투 시스템에서 구독) ──────────────────
     /// <summary>공격 애니메이션의 히트 타이밍에 발생합니다.</summary>
-    public event System.Action OnAttackHitFrame;
+    public event Action OnAttackHitFrame;
 
     /// <summary>공격 애니메이션에서 다음 콤보 입력 가능 타이밍에 발생합니다.</summary>
-    public event System.Action OnComboWindowOpen;
+    public event Action OnComboWindowOpen;
 
     /// <summary>공격 애니메이션 종료 시 발생합니다.</summary>
-    public event System.Action OnAttackEnd;
+    public event Action OnAttackEnd;
 
     /// <summary>회피 애니메이션에서 무적 시작 시 발생합니다.</summary>
-    public event System.Action OnDodgeInvincibleStart;
+    public event Action OnDodgeInvincibleStart;
 
     /// <summary>회피 애니메이션에서 무적 종료 시 발생합니다.</summary>
-    public event System.Action OnDodgeInvincibleEnd;
+    public event Action OnDodgeInvincibleEnd;
 
     // ════════════════════════════════════════════════════
     //  초기화
