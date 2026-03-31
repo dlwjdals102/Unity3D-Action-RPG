@@ -18,6 +18,18 @@ public class HitBoxController : MonoBehaviour
     [SerializeField] private float[] _comboDamageMultipliers = { 1.0f, 1.2f, 1.5f };
 
     private int _currentComboIndex = 0;
+    private bool _suppressed = false;
+
+    /// <summary>
+    /// HitBox 작동을 억제합니다. 스킬 상태 등에서
+    /// 무기 HitBox가 작동하면 안 될 때 사용합니다.
+    /// </summary>
+    public void SetSuppressed(bool suppressed)
+    {
+        _suppressed = suppressed;
+        if (suppressed)
+            _weaponHitBox?.DisableHitBox();
+    }
 
     private void Awake()
     {
@@ -52,6 +64,7 @@ public class HitBoxController : MonoBehaviour
     private void OnHitFrame()
     {
         if (_weaponHitBox == null) return;
+        if (_suppressed) return;
 
         _weaponHitBox.EnableHitBox();
 

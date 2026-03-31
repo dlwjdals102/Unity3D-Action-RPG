@@ -48,6 +48,27 @@ public abstract class BaseState : IState
             return true;
         }
 
+        if (Input.ConsumeSkill1())
+        {
+            var executor = Owner.GetComponent<SkillExecutor>();
+            if (executor != null && executor.IsSkillReady(0))
+            {
+                Owner.SkillState.SetSkillSlot(0);
+                Owner.TransitionTo(Define.CharacterState.Skill);
+                return true;
+            }
+        }
+        if (Input.ConsumeSkill2())
+        {
+            var executor = Owner.GetComponent<SkillExecutor>();
+            if (executor != null && executor.IsSkillReady(1))
+            {
+                Owner.SkillState.SetSkillSlot(1);
+                Owner.TransitionTo(Define.CharacterState.Skill);
+                return true;
+            }
+        }
+
         return false;
     }
 }

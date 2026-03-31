@@ -56,6 +56,7 @@ public class PlayerStateMachine : MonoBehaviour
     public DodgeState DodgeState { get; private set; }
     public HitState HitState { get; private set; }
     public DieState DieState { get; private set; }
+    public SkillState SkillState { get; private set; }
 
     // ── 플래그 ──
     private bool _isDead = false;
@@ -86,6 +87,7 @@ public class PlayerStateMachine : MonoBehaviour
         DodgeState = new DodgeState(Context);
         HitState = new HitState(Context);
         DieState = new DieState(Context);
+        SkillState = new SkillState(Context);
     }
 
     private void Start()
@@ -146,6 +148,9 @@ public class PlayerStateMachine : MonoBehaviour
             case Define.CharacterState.Die:
                 _isDead = true;
                 FSM.ChangeState(DieState);
+                break;
+            case Define.CharacterState.Skill:
+                FSM.ChangeState(SkillState);
                 break;
         }
     }
