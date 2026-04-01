@@ -19,7 +19,7 @@ MonoBehaviour:
   baseDamage: 30
   damageType: 0
   knockbackForce: 8
-  cooldown: 5
+  cooldown: 0
   rangeType: 0
   range: 3
   angle: 90

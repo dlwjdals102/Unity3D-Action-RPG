@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 /// <summary>
 /// 공격 판정 Collider. 무기나 주먹 등에 부착합니다.
@@ -42,7 +42,7 @@ public class HitBox : MonoBehaviour
 
     // ── 이벤트 ──
     /// <summary>대상에 히트했을 때 발생 (이펙트, 사운드 등에서 구독)</summary>
-    public event Action<DamageData, GameObject> OnHit;
+    public event System.Action<DamageData, GameObject> OnHit;
 
     // ════════════════════════════════════════════════════
     //  초기화

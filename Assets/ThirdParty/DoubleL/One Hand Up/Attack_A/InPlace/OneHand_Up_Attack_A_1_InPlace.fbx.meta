@@ -62,14 +62,14 @@ ModelImporter:
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
       events:
-      - time: 0.21827412
+      - time: 0.20853385
         functionName: OnHitFrame
         data: 
         objectReferenceParameter: {fileID: 11500000, guid: ca48665dd46a01145aec0a83dc7809b2, type: 3}
         floatParameter: 0
         intParameter: 0
         messageOptions: 0
-      - time: 0.50212604
+      - time: 0.661217
         functionName: OnComboOpen
         data: 
         objectReferenceParameter: {fileID: 11500000, guid: ca48665dd46a01145aec0a83dc7809b2, type: 3}
