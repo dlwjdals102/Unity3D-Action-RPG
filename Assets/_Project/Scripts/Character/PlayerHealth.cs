@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 /// <summary>
 /// 플레이어 HP 관리 및 IDamageable 구현.
@@ -14,28 +15,38 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     // ════════════════════════════════════════════════════
 
     [Header("Stats")]
-    [SerializeField] private float _maxHp = 100f;
+    [SerializeField] private float _baseMaxHp = 100f;
 
     // ════════════════════════════════════════════════════
     //  IDamageable 구현
     // ════════════════════════════════════════════════════
 
     public float CurrentHp { get; private set; }
-    public float MaxHp => _maxHp;
+
+    public float MaxHp
+    {
+        get
+        {
+            if (_stats != null) return _stats.TotalMaxHp;
+            return _baseMaxHp;
+        }
+    }
+
     public bool IsAlive => CurrentHp > 0f;
 
     /// <summary>HP 비율 (0~1, UI용)</summary>
-    public float HpRatio => _maxHp > 0 ? CurrentHp / _maxHp : 0f;
+    public float HpRatio => MaxHp > 0 ? CurrentHp / MaxHp : 0f;
 
     // ── 이벤트 ──
     /// <summary>데미지를 받았을 때 (현재HP, 최대HP)</summary>
-    public event System.Action<float, float> OnHpChanged;
+    public event Action<float, float> OnHpChanged;
 
     /// <summary>사망 시</summary>
-    public event System.Action OnDeath;
+    public event Action OnDeath;
 
     // ── 참조 ──
     private PlayerStateMachine _stateMachine;
+    private PlayerStats _stats;
 
     // ════════════════════════════════════════════════════
     //  초기화
@@ -43,8 +54,10 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
     private void Awake()
     {
-        CurrentHp = _maxHp;
         _stateMachine = GetComponent<PlayerStateMachine>();
+        _stats = GetComponent<PlayerStats>();
+
+        CurrentHp = MaxHp;
     }
 
     // ════════════════════════════════════════════════════
@@ -60,16 +73,21 @@ public class PlayerHealth : MonoBehaviour, IDamageable
             _stateMachine.CurrentStateType == Define.CharacterState.Dodge)
             return 0f;
 
-        float actualDamage = Mathf.Min(data.Amount, CurrentHp);
+        // 방어력 적용
+        float reducedDamage = data.Amount;
+        if (_stats != null && data.Type != Define.DamageType.True)
+            reducedDamage = _stats.CalculateIncomingDamage(data.Amount);
+
+        float actualDamage = Mathf.Min(reducedDamage, CurrentHp);
         CurrentHp -= actualDamage;
 
         Debug.Log(
-            $"[Player] 피격! 데미지: {actualDamage:F0} | " +
-            $"HP: {CurrentHp:F0}/{_maxHp:F0}"
+            $"[Player] 피격! 데미지: {actualDamage:F0} (원본: {data.Amount:F0}) | " +
+                $"HP: {CurrentHp:F0}/{MaxHp:F0}"
         );
 
         // HP 변경 이벤트
-        OnHpChanged?.Invoke(CurrentHp, _maxHp);
+        OnHpChanged?.Invoke(CurrentHp, MaxHp);
 
         // 사망 체크
         if (!IsAlive)
@@ -95,14 +113,14 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     {
         if (!IsAlive) return;
 
-        CurrentHp = Mathf.Min(CurrentHp + amount, _maxHp);
-        OnHpChanged?.Invoke(CurrentHp, _maxHp);
+        CurrentHp = Mathf.Min(CurrentHp + amount, MaxHp);
+        OnHpChanged?.Invoke(CurrentHp, MaxHp);
     }
 
     /// <summary>HP를 최대로 회복합니다.</summary>
     public void FullHeal()
     {
-        CurrentHp = _maxHp;
-        OnHpChanged?.Invoke(CurrentHp, _maxHp);
+        CurrentHp = MaxHp;
+        OnHpChanged?.Invoke(CurrentHp, MaxHp);
     }
 }

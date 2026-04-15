@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityEngine.TextCore.Text;
 
 /// <summary>
 /// 스킬 실행 및 쿨다운을 관리합니다.
@@ -31,6 +32,8 @@ public class SkillExecutor : MonoBehaviour
     // ── 캐싱 ──
     private PlayerAnimator _animator;
     private Transform _transform;
+    private PlayerStats _stats;
+    private EquipmentManager _equipment;
 
     // ── 이벤트 ──
     /// <summary>스킬 사용 시 발생 (UI 쿨다운 표시용)</summary>
@@ -47,8 +50,10 @@ public class SkillExecutor : MonoBehaviour
     {
         _animator = GetComponent<PlayerAnimator>();
         _transform = transform;
+        _stats = GetComponent<PlayerStats>();
+        _equipment = GetComponent<EquipmentManager>();
     }
-
+        
     private void Update()
     {
         UpdateCooldowns();
@@ -191,8 +196,13 @@ public class SkillExecutor : MonoBehaviour
             Vector3 knockbackDir = (hit.transform.position - _transform.position).normalized;
             knockbackDir.y = 0f;
 
+            // 데미지 = 스탯 기반 + 스킬 자체 데미지
+            float finalDamage = skill.baseDamage;
+            if (_stats != null)
+                finalDamage += _stats.CalculateOutgoingDamage();
+
             DamageData data = new DamageData(
-                amount: skill.baseDamage,
+                amount: finalDamage,
                 type: skill.damageType,
                 attacker: gameObject,
                 hitPoint: hitPoint,

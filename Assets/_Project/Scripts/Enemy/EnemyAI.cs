@@ -341,10 +341,32 @@ public class EnemyAI : MonoBehaviour
 
     private void OnDeath()
     {
+        // 아이템 드롭
+        var dropper = GetComponent<ItemDropper>();
+        dropper?.DropItems();
+
         TransitionTo(AIState.Die);
 
-        // 일정 시간 후 파괴 (또는 리스폰)
-        Destroy(gameObject, 5f);
+        // EnemyRespawn이 있으면 리스폰 처리, 없으면 파괴
+        var respawn = GetComponent<EnemyRespawn>();
+        if (respawn == null)
+            Destroy(gameObject, 5f);
+    }
+
+    /// <summary>AI를 초기 상태로 리셋합니다 (리스폰 시 호출).</summary>
+    public void ResetAI()
+    {
+        CancelInvoke();
+        _isAttacking = false;
+        _lastAttackTime = -999f;
+        _hasPatrolTarget = false;
+
+        // Animator 리셋
+        _controller.Animator.Rebind();
+        _controller.Animator.Update(0f);
+
+        // Idle 상태로 전환
+        TransitionTo(AIState.Idle);
     }
 
     // ════════════════════════════════════════════════════

@@ -70,16 +70,7 @@ public static class Define
     // ════════════════════════════════════════════════════
     //  스탯
     // ════════════════════════════════════════════════════
-    public enum StatType
-    {
-        MaxHp,
-        Attack,
-        Defense,
-        Speed,
-        CritRate,
-        CritDamage,
-        CooldownReduction
-    }
+    
 
     // ════════════════════════════════════════════════════
     //  레이어 (Physics 충돌 매트릭스)
@@ -139,6 +130,7 @@ public static class Define
         public static readonly int Die = UnityEngine.Animator.StringToHash("Die");
         public static readonly int Skill = UnityEngine.Animator.StringToHash("Skill");
         public static readonly int SkillIndex = UnityEngine.Animator.StringToHash("SkillIndex");
+        public static readonly int IsArmed = UnityEngine.Animator.StringToHash("IsArmed");
     }
 
     // ════════════════════════════════════════════════════

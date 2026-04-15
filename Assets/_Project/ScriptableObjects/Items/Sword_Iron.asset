@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92da11a752a0de8449eaac26d08ec9a6, type: 3}
+  m_Name: Sword_Iron
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: Sword_Iron
+  description: irooooon sword
+  icon: {fileID: -123074690, guid: 180e873e07c77734584e1aec6c742fca, type: 3}
+  itemType: 0
+  rarity: 2
+  maxStack: 1
+  bonusAttack: 5
+  bonusDefense: 0
+  bonusMaxHp: 0
+  bonusSpeed: 0
+  bonusCritRate: 0
+  bonusCritDamage: 0
+  consumableType: 0
+  effectAmount: 0
+  dropPrefab: {fileID: 919132149155446097, guid: a095f798aba8f2946b3a23de742b2fb8, type: 3}

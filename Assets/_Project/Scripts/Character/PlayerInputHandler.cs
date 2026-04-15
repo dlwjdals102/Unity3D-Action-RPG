@@ -53,6 +53,9 @@ public class PlayerInputHandler : MonoBehaviour
     /// <summary>현재 달리기 중인지</summary>
     public bool IsRunning { get; private set; }
 
+    /// <summary>입력 억제 플래그. true이면 모든 단발 입력을 무시합니다.</summary>
+    public bool InputSuppressed { get; set; } = false;
+
     // ════════════════════════════════════════════════════
     //  초기화 / 해제
     // ════════════════════════════════════════════════════
@@ -126,12 +129,21 @@ public class PlayerInputHandler : MonoBehaviour
 
     private void OnMove(InputAction.CallbackContext ctx)
     {
+        if (InputSuppressed)
+        {
+            MoveInput = Vector2.zero;
+            _controller.SetMoveInput(Vector2.zero);
+            return;
+        }
+
         MoveInput = ctx.ReadValue<Vector2>();
         _controller.SetMoveInput(MoveInput);
     }
 
     private void OnRun(InputAction.CallbackContext ctx)
     {
+        if (InputSuppressed) return;
+
         // performed = 눌림, canceled = 뗌
         IsRunning = ctx.performed;
         _controller.SetRunInput(IsRunning);
@@ -143,36 +155,50 @@ public class PlayerInputHandler : MonoBehaviour
 
     private void OnAttack(InputAction.CallbackContext ctx)
     {
+        if (InputSuppressed) return;
+
         AttackBuffered = true;
     }
 
     private void OnHeavyAttack(InputAction.CallbackContext ctx)
     {
+        if (InputSuppressed) return;
+
         HeavyAttackBuffered = true;
     }
 
     private void OnDodge(InputAction.CallbackContext ctx)
     {
+        if (InputSuppressed) return;
+
         DodgeBuffered = true;
     }
 
     private void OnJump(InputAction.CallbackContext ctx)
     {
+        if (InputSuppressed) return;
+
         _controller.SetJumpInput();
     }
 
     private void OnSkill1(InputAction.CallbackContext ctx)
     {
+        if (InputSuppressed) return;
+
         Skill1Buffered = true;
     }
 
     private void OnSkill2(InputAction.CallbackContext ctx)
     {
+        if (InputSuppressed) return;
+
         Skill2Buffered = true;
     }
 
     private void OnInteract(InputAction.CallbackContext ctx)
     {
+        if (InputSuppressed) return;
+
         InteractBuffered = true;
     }
 

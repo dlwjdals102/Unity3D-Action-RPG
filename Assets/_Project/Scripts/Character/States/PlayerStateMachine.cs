@@ -167,20 +167,6 @@ public class PlayerStateMachine : MonoBehaviour
     {
         if (_isDead) return;
 
-        // 회피 중 무적이면 무시 (DodgeState에서 플래그 관리)
-        if (CurrentStateType == Define.CharacterState.Dodge)
-            return;
-
-        // TODO: HP 감소 로직 (스탯 시스템 연동 후)
-        // float currentHp -= damage;
-
-        // HP 0 이하면 사망
-        // if (currentHp <= 0)
-        // {
-        //     TransitionTo(Define.CharacterState.Die);
-        //     return;
-        // }
-
         TransitionTo(Define.CharacterState.Hit);
     }
 

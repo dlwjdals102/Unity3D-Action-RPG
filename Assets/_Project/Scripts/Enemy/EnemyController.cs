@@ -173,6 +173,20 @@ public class EnemyController : MonoBehaviour, IDamageable
         }
     }
 
+    /// <summary>적을 초기 상태로 리셋합니다 (리스폰 시).</summary>
+    public void ResetEnemy()
+    {
+        CurrentHp = MaxHp;
+
+        if (_renderer != null)
+            _renderer.material.color = _originalColor;
+
+        if (!Agent.enabled)
+            Agent.enabled = true;
+
+        Agent.isStopped = false;
+    }
+
     /// <summary>Animator Speed 파라미터를 업데이트합니다.</summary>
     public void UpdateAnimator()
     {

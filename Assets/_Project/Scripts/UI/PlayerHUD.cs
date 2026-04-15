@@ -54,7 +54,7 @@ public class PlayerHUD : MonoBehaviour
     private void Start()
     {
         // 플레이어 찾기
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        GameObject player = GameObject.FindGameObjectWithTag(Define.Tag.Player);
         if (player != null)
         {
             _playerHealth = player.GetComponent<PlayerHealth>();

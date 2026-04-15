@@ -114,6 +114,7 @@ public class PlayerController : MonoBehaviour
         if (_groundLayer == 0)
             _groundLayer = Define.Layer.GroundMask;
 
+        // 커서 잠금
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -160,9 +161,6 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        // ── 임시 키보드 입력 (Input System 연동 전 테스트용) ──
-        //HandleTemporaryInput();
-
         // ── 핵심 로직 순서 ──
         CheckGround();
         HandleMovement();
@@ -171,25 +169,6 @@ public class PlayerController : MonoBehaviour
         ApplyGravity();
         ApplyFinalMovement();
         UpdateAnimator();
-    }
-
-    // ════════════════════════════════════════════════════
-    //  임시 입력 처리 (Input System 연동 전까지 사용)
-    // ════════════════════════════════════════════════════
-
-    private void HandleTemporaryInput()
-    {
-        // WASD 이동
-        float h = Input.GetAxisRaw("Horizontal");
-        float v = Input.GetAxisRaw("Vertical");
-        _inputMove = new Vector2(h, v);
-
-        // Shift 달리기
-        _inputRun = Input.GetKey(KeyCode.LeftShift);
-
-        // Space 점프
-        if (Input.GetKeyDown(KeyCode.Space))
-            SetJumpInput();
     }
 
     // ════════════════════════════════════════════════════
@@ -336,15 +315,20 @@ public class PlayerController : MonoBehaviour
 
     private void ApplyFinalMovement()
     {
-        // 수평 이동 + 수직 이동 합산
+        // 수평 이동 + 수직 이동 + 외부 힘 합산
         Vector3 horizontalMove = _moveDirection * _currentSpeed;
         Vector3 finalMove = new Vector3(
-            horizontalMove.x,
+            horizontalMove.x + _velocity.x,
             _verticalVelocity,
-            horizontalMove.z
+            horizontalMove.z + _velocity.z
         );
 
         _controller.Move(finalMove * Time.deltaTime);
+
+        // 외부 힘 감쇠
+        _velocity = Vector3.Lerp(_velocity, Vector3.zero, 10f * Time.deltaTime);
+        if (_velocity.magnitude < 0.01f)
+            _velocity = Vector3.zero;
     }
 
     // ════════════════════════════════════════════════════
@@ -368,6 +352,15 @@ public class PlayerController : MonoBehaviour
     public void AddForce(Vector3 force)
     {
         _velocity += force;
+    }
+
+    /// <summary>
+    /// 외부 속도를 설정합니다. (회피 이동 등 지속적 이동에 사용)
+    /// AddForce와 달리 누적이 아니라 덮어씁니다.
+    /// </summary>
+    public void SetExternalVelocity(Vector3 velocity)
+    {
+        _velocity = velocity;
     }
 
     /// <summary>

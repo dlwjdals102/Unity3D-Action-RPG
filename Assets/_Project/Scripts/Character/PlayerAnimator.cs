@@ -67,6 +67,12 @@ public class PlayerAnimator : MonoBehaviour
         _animator.SetBool(Define.AnimParam.IsGrounded, isGrounded);
     }
 
+    /// <summary>무기 장착 상태를 Animator에 전달합니다.</summary>
+    public void SetArmed(bool isArmed)
+    {
+        _animator.SetBool(Define.AnimParam.IsArmed, isArmed);
+    }
+
     // ════════════════════════════════════════════════════
     //  상태 전환 트리거 (FSM에서 호출)
     // ════════════════════════════════════════════════════

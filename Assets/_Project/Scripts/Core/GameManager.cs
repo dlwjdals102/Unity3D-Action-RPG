@@ -90,7 +90,8 @@ public class GameManager : Singleton<GameManager>
 
         CurrentState = Define.GameState.GameOver;
         // 게임 오버 시에는 슬로우 모션 연출 후 정지
-        Time.timeScale = 0.3f;
+        /*Time.timeScale = 0.3f;*/
+        // 타임스케일은 GameUIManager.DeathSequence에서 관리
     }
 
     // ══════════════════════════════════════════════════

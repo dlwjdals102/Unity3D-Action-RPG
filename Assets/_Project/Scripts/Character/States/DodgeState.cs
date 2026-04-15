@@ -71,14 +71,16 @@ public class DodgeState : BaseState
         }
 
         // 회피 중 이동 방향으로 돌진
-        float dodgeSpeed = Controller.CurrentSpeed > 0 ? 8f : 6f;
-        Controller.AddForce(_dodgeDirection * dodgeSpeed * Time.deltaTime);
+        // SetExternalVelocity는 속도값을 설정하고, ApplyFinalMovement에서 deltaTime을 곱함
+        float dodgeSpeed = 8f;
+        Controller.SetExternalVelocity(_dodgeDirection * dodgeSpeed);
     }
 
     public override void Exit()
     {
         IsInvincible = false;
         Controller.SetCanMove(true);
+        Controller.SetExternalVelocity(Vector3.zero);
 
         // 이벤트 구독 해제
         Animator.OnDodgeInvincibleStart -= OnInvincibleStart;
