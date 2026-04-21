@@ -160,7 +160,11 @@ public class HitBox : MonoBehaviour
 
         _hitTargets.Add(targetId);
 
-        Vector3 hitPoint = other.ClosestPoint(transform.position);
+        // HitBox 중심에서 가장 가까운 상대 Collider 표면 위치 계산
+        // (정확한 접촉 지점 = 파티클이 부위에 맞게 생성됨)
+        Vector3 hitBoxCenter = _collider.bounds.center;
+        Vector3 hitPoint = other.ClosestPoint(hitBoxCenter);
+
         Vector3 knockbackDir = (other.transform.position - _owner.position).normalized;
         knockbackDir.y = 0f;
 
@@ -186,10 +190,22 @@ public class HitBox : MonoBehaviour
             applyHitStop: _applyHitStop
         );
 
-        damageable.TakeDamage(data);
+        float actualDamage = damageable.TakeDamage(data);
 
         if (_applyHitStop && GameManager.HasInstance)
             GameManager.Instance.HitStop(0.08f, 0.05f);
+
+        // 데미지 팝업 생성
+        if (DamagePopupSpawner.HasInstance && actualDamage > 0f)
+        {
+            // 플레이어가 적을 공격 = Normal, 적이 플레이어 공격 = PlayerHit
+            bool targetIsPlayer = other.transform.root.CompareTag(Define.Tag.Player);
+            var popupType = targetIsPlayer
+                ? DamagePopup.DamageType.PlayerHit
+                : DamagePopup.DamageType.Normal;
+
+            DamagePopupSpawner.Instance.SpawnPopup(actualDamage, hitPoint, popupType);
+        }
 
         OnHit?.Invoke(data, other.gameObject);
     }

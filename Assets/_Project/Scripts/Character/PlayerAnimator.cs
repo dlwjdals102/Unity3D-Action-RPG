@@ -37,6 +37,9 @@ public class PlayerAnimator : MonoBehaviour
     /// <summary>회피 애니메이션에서 무적 종료 시 발생합니다.</summary>
     public event Action OnDodgeInvincibleEnd;
 
+    /// <summary>피격 애니메이션 종료 시 발생합니다.</summary>
+    public event Action OnHitEnd;
+
     // ════════════════════════════════════════════════════
     //  초기화
     // ════════════════════════════════════════════════════
@@ -183,5 +186,14 @@ public class PlayerAnimator : MonoBehaviour
     private void OnInvincibleEnd()
     {
         OnDodgeInvincibleEnd?.Invoke();
+    }
+
+    /// <summary>
+    /// 피격 애니메이션 종료.
+    /// Animation Event에서 "OnHitFinish" 로 등록합니다.
+    /// </summary>
+    private void OnHitFinish()
+    {
+        OnHitEnd?.Invoke();
     }
 }

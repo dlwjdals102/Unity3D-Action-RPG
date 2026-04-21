@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f992f1d5524f0d44a6b337478147c20, type: 3}
   m_Name: DefaultPlayerStats
   m_EditorClassIdentifier: Assembly-CSharp::PlayerStatsData
-  baseAttack: 100
+  baseAttack: 10
   baseDefense: 5
   baseMaxHp: 100
   attackPerLevel: 3

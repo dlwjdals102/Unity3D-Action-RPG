@@ -8,6 +8,8 @@
 /// </summary>
 public class HitState : BaseState
 {
+    private bool _hitFinished = false;
+
     public HitState(PlayerStateMachine.PlayerStateContext context) : base(context) { }
 
     public override void Enter()
@@ -20,23 +22,33 @@ public class HitState : BaseState
 
         // 입력 버퍼 초기화 (피격 중 쌓인 입력 무시)
         Input.ClearAllBuffers();
+
+        // 애니메이션 종료 이벤트 구독
+        Animator.OnHitEnd += OnHitAnimationEnd;
     }
 
     public override void Update()
     {
-        // 경직 시간이 지나면 복귀
-        if (Owner.FSM.StateTime >= Define.Balance.HitStunDuration)
-        {
-            if (Input.MoveInput.magnitude > 0.1f)
-                Owner.TransitionTo(Define.CharacterState.Move);
-            else
-                Owner.TransitionTo(Define.CharacterState.Idle);
-        }
+        // 애니메이션 이벤트로 종료 신호를 받아야 복귀
+        // 안전장치로 최대 1.5초 후 강제 종료
+        if (!_hitFinished && Owner.FSM.StateTime < 1.5f)
+            return;
+
+        if (Input.MoveInput.magnitude > 0.1f)
+            Owner.TransitionTo(Define.CharacterState.Move);
+        else
+            Owner.TransitionTo(Define.CharacterState.Idle);
     }
 
     public override void Exit()
     {
         Controller.SetCanMove(true);
+        Animator.OnHitEnd -= OnHitAnimationEnd;
+    }
+
+    private void OnHitAnimationEnd()
+    {
+        _hitFinished = true;
     }
 }
 

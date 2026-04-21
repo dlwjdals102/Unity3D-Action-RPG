@@ -21,9 +21,8 @@ MonoBehaviour:
   bonusAttack: 0
   bonusDefense: 3
   bonusMaxHp: 0
-  bonusSpeed: 0
-  bonusCritRate: 0
-  bonusCritDamage: 0
+  weaponHitBoxSize: {x: 0.5, y: 0.5, z: 1}
+  weaponHitBoxCenter: {x: 0, y: 1.2, z: 0.7}
   consumableType: 0
   effectAmount: 0
   dropPrefab: {fileID: 0}

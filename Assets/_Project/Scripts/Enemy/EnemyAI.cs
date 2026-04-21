@@ -58,6 +58,11 @@ public class EnemyAI : MonoBehaviour
     [Header("Attack")]
     [SerializeField] private HitBox _attackHitBox;
 
+    // 공격 종료 추적
+    private EnemyAnimatorBridge _animBridge;
+    private bool _attackAnimationFinished;
+    private bool _hitAnimationFinished;
+
     // ════════════════════════════════════════════════════
     //  초기화
     // ════════════════════════════════════════════════════
@@ -65,6 +70,7 @@ public class EnemyAI : MonoBehaviour
     private void Awake()
     {
         _controller = GetComponent<EnemyController>();
+        _animBridge = GetComponent<EnemyAnimatorBridge>();
     }
 
     private void Start()
@@ -76,6 +82,12 @@ public class EnemyAI : MonoBehaviour
         _controller.OnDamaged += OnDamaged;
         _controller.OnDeath += OnDeath;
 
+        if (_animBridge != null)
+        {
+            _animBridge.OnAttackEnd += OnAttackAnimationEnd;
+            _animBridge.OnHitEnd += OnHitAnimationEnd;
+        }
+
         TransitionTo(AIState.Idle);
     }
 
@@ -86,6 +98,23 @@ public class EnemyAI : MonoBehaviour
             _controller.OnDamaged -= OnDamaged;
             _controller.OnDeath -= OnDeath;
         }
+
+        if (_animBridge != null)
+        {
+            _animBridge.OnAttackEnd -= OnAttackAnimationEnd;
+            _animBridge.OnHitEnd -= OnHitAnimationEnd;
+        }
+            
+    }
+
+    private void OnAttackAnimationEnd()
+    {
+        _attackAnimationFinished = true;
+    }
+
+    private void OnHitAnimationEnd()
+    {
+        _hitAnimationFinished = true;
     }
 
     // ════════════════════════════════════════════════════
@@ -143,20 +172,20 @@ public class EnemyAI : MonoBehaviour
                 _controller.StopMovement();
                 _controller.Agent.ResetPath();
                 _isAttacking = true;
+                _attackAnimationFinished = false;
                 PerformAttack();
                 break;
 
             case AIState.Hit:
                 _controller.StopMovement();
                 _controller.Agent.ResetPath();
-                CancelInvoke();
                 _attackHitBox?.DisableHitBox();
+                _hitAnimationFinished = false;
                 _controller.Animator.SetTrigger(Define.AnimParam.Hit);
                 break;
 
             case AIState.Die:
                 _controller.StopMovement();
-                CancelInvoke();
                 _attackHitBox?.DisableHitBox();
                 _controller.DisableAgent();
                 _controller.Animator.SetTrigger(Define.AnimParam.Die);
@@ -170,8 +199,6 @@ public class EnemyAI : MonoBehaviour
         {
             case AIState.Attack:
                 _isAttacking = false;
-                CancelInvoke(nameof(EnableAttackHitBox));
-                CancelInvoke(nameof(DisableAttackHitBox));
                 _attackHitBox?.DisableHitBox();
                 break;
         }
@@ -255,7 +282,7 @@ public class EnemyAI : MonoBehaviour
             return;
         }
 
-        // 공격 범위 안 → Attack
+        // 공격 범위 안 + 쿨타임 OK → Attack
         if (IsPlayerInRange(_data.attackRange))
         {
             if (Time.time - _lastAttackTime >= _data.attackCooldown)
@@ -265,7 +292,16 @@ public class EnemyAI : MonoBehaviour
             }
         }
 
-        // 플레이어 추적
+        // stopChaseRange 안에 있으면 추적 중단 (제자리에서 플레이어 바라보기)
+        if (IsPlayerInRange(_data.stopChaseRange))
+        {
+            _controller.StopMovement();
+            if (_controller.PlayerTransform != null)
+                _controller.LookAtTarget(_controller.PlayerTransform.position);
+            return;
+        }
+
+        // stopChaseRange 밖이면 추적
         if (_controller.PlayerTransform != null)
         {
             _controller.MoveTo(_controller.PlayerTransform.position);
@@ -279,36 +315,24 @@ public class EnemyAI : MonoBehaviour
 
     private void UpdateAttack()
     {
-        // 공격 애니메이션이 끝나면 복귀
-        if (_stateTimer >= 1.2f)
-        {
-            _isAttacking = false;
-            _lastAttackTime = Time.time;
+        // 이벤트 누락에 대비해 안전장치로 2초 타임아웃
+        if (!_attackAnimationFinished && _stateTimer < 2.0f)
+            return;
 
-            if (IsPlayerInRange(_data.detectRange))
-                TransitionTo(AIState.Chase);
-            else
-                TransitionTo(AIState.Idle);
-        }
+        _isAttacking = false;
+        _lastAttackTime = Time.time;
+
+        if (IsPlayerInRange(_data.detectRange))
+            TransitionTo(AIState.Chase);
+        else
+            TransitionTo(AIState.Idle);
     }
 
     private void PerformAttack()
     {
         _controller.Animator.SetTrigger(Define.AnimParam.Attack);
 
-        // HitBox 활성화 (잠시 후 — 공격 모션 타이밍에 맞춤)
-        Invoke(nameof(EnableAttackHitBox), 0.4f);
-        Invoke(nameof(DisableAttackHitBox), 0.7f);
-    }
-
-    private void EnableAttackHitBox()
-    {
-        _attackHitBox?.EnableHitBox();
-    }
-
-    private void DisableAttackHitBox()
-    {
-        _attackHitBox?.DisableHitBox();
+        // HitBox ON/OFF는 EnemyAnimatorBridge가 Animation Event로 처리
     }
 
     // ════════════════════════════════════════════════════
@@ -317,13 +341,15 @@ public class EnemyAI : MonoBehaviour
 
     private void UpdateHit()
     {
-        if (_stateTimer >= _hitStunDuration)
-        {
-            if (IsPlayerInRange(_data.detectRange))
-                TransitionTo(AIState.Chase);
-            else
-                TransitionTo(AIState.Idle);
-        }
+        // 피격 애니메이션의 OnHitAnimationEnd 이벤트가 호출되어야 종료
+        // 이벤트 누락에 대비해 안전장치로 1.5초 타임아웃
+        if (!_hitAnimationFinished && _stateTimer < 1.5f)
+            return;
+
+        if (IsPlayerInRange(_data.detectRange))
+            TransitionTo(AIState.Chase);
+        else
+            TransitionTo(AIState.Idle);
     }
 
     // ════════════════════════════════════════════════════
@@ -335,6 +361,9 @@ public class EnemyAI : MonoBehaviour
         if (!_controller.IsAlive) return;
         if (_currentState == AIState.Die) return;
         if (_currentState == AIState.Hit) return;
+
+        // 피격 시 공격 쿨다운 리셋 (Hit 종료 직후 바로 공격하는 것 방지)
+        _lastAttackTime = Time.time;
 
         TransitionTo(AIState.Hit);
     }

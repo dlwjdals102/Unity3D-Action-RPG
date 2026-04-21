@@ -47,6 +47,8 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     // ── 참조 ──
     private PlayerStateMachine _stateMachine;
     private PlayerStats _stats;
+    private PlayerController _controller;
+    private InventorySystem _inventory;
 
     // ════════════════════════════════════════════════════
     //  초기화
@@ -56,8 +58,36 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     {
         _stateMachine = GetComponent<PlayerStateMachine>();
         _stats = GetComponent<PlayerStats>();
+        _controller = GetComponent<PlayerController>();
+        _inventory = GetComponent<InventorySystem>();
 
         CurrentHp = MaxHp;
+    }
+
+    private void Start()
+    {
+        // 소비 아이템 사용 이벤트 구독
+        if (_inventory != null)
+            _inventory.OnConsumableUsed += OnConsumableUsed;
+    }
+
+    private void OnDestroy()
+    {
+        if (_inventory != null)
+            _inventory.OnConsumableUsed -= OnConsumableUsed;
+    }
+
+    private void OnConsumableUsed(ItemData item)
+    {
+        if (item == null) return;
+
+        switch (item.consumableType)
+        {
+            case ConsumableType.HealHp:
+                Heal(item.effectAmount);
+                Debug.Log($"[PlayerHealth] {item.itemName} 효과 적용: HP +{item.effectAmount}");
+                break;
+        }
     }
 
     // ════════════════════════════════════════════════════
@@ -88,6 +118,14 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
         // HP 변경 이벤트
         OnHpChanged?.Invoke(CurrentHp, MaxHp);
+
+        // 넉백 적용 (살아있을 때만)
+        if (IsAlive && data.KnockbackForce > 0f && _controller != null)
+        {
+            Vector3 dir = data.KnockbackDirection;
+            dir.y = 0f;
+            _controller.SetExternalVelocity(dir.normalized * data.KnockbackForce);
+        }
 
         // 사망 체크
         if (!IsAlive)

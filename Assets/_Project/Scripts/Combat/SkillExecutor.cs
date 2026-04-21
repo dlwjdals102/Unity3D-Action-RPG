@@ -211,7 +211,17 @@ public class SkillExecutor : MonoBehaviour
                 applyHitStop: skill.applyHitStop
             );
 
-            damageable.TakeDamage(data);
+            float actualDamage = damageable.TakeDamage(data);
+
+            // 스킬 데미지 팝업 (Critical 타입으로 표시)
+            if (DamagePopupSpawner.HasInstance && actualDamage > 0f)
+            {
+                DamagePopupSpawner.Instance.SpawnPopup(
+                    actualDamage,
+                    hitPoint,
+                    DamagePopup.DamageType.Critical
+                );
+            }
         }
 
         // 히트스톱

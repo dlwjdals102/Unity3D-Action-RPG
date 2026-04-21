@@ -87,6 +87,9 @@ public class InventorySystem : MonoBehaviour
     /// <summary>아이템 제거 시</summary>
     public event Action<ItemData, int> OnItemRemoved;
 
+    /// <summary>소비 아이템 사용 시 (아이템 데이터). 외부 시스템이 구독하여 효과 적용</summary>
+    public event Action<ItemData> OnConsumableUsed;
+
     // ════════════════════════════════════════════════════
     //  초기화
     // ════════════════════════════════════════════════════
@@ -216,15 +219,10 @@ public class InventorySystem : MonoBehaviour
 
     private void ApplyConsumableEffect(ItemData item)
     {
-        var health = GetComponent<PlayerHealth>();
+        // 이벤트 발행 — 외부 시스템(PlayerHealth 등)이 구독하여 효과 적용
+        OnConsumableUsed?.Invoke(item);
 
-        switch (item.consumableType)
-        {
-            case ConsumableType.HealHp:
-                if (health != null) health.Heal(item.effectAmount);
-                Debug.Log($"[Inventory] {item.itemName} 사용! HP +{item.effectAmount}");
-                break;
-        }
+        Debug.Log($"[Inventory] {item.itemName} 사용 이벤트 발행 ({item.consumableType})");
     }
 
     // ════════════════════════════════════════════════════

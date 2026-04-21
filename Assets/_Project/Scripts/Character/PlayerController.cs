@@ -64,8 +64,8 @@ public class PlayerController : MonoBehaviour
 
     // 점프 관련
     private bool _isGrounded;
-    private float _lastGroundedTime;
-    private float _lastJumpRequestTime;
+    private float _lastGroundedTime = -999f;
+    private float _lastJumpRequestTime = -999f;
     private bool _jumpRequested;
 
     // 입력값 (외부에서 설정)

@@ -55,6 +55,7 @@ public class EnemyController : MonoBehaviour, IDamageable
     private Renderer _renderer;
     private Color _originalColor;
     private Coroutine _flashCoroutine;
+    private Coroutine _knockbackCoroutine;
 
     // ════════════════════════════════════════════════════
     //  초기화
@@ -73,7 +74,7 @@ public class EnemyController : MonoBehaviour, IDamageable
         {
             CurrentHp = _data.maxHp;
             Agent.speed = _data.moveSpeed;
-            Agent.stoppingDistance = _data.attackRange * 0.8f;
+            Agent.stoppingDistance = _data.stopChaseRange;
         }
     }
 
@@ -101,11 +102,12 @@ public class EnemyController : MonoBehaviour, IDamageable
             $"HP: {CurrentHp:F0}/{MaxHp:F0}"
         );
 
-        // 넉백
+        // 넉백 (코루틴으로 부드럽게 이동)
         if (data.KnockbackForce > 0f && Agent.enabled)
         {
-            Vector3 knockback = data.KnockbackDirection * data.KnockbackForce;
-            Agent.velocity = knockback;
+            if (_knockbackCoroutine != null)
+                StopCoroutine(_knockbackCoroutine);
+            _knockbackCoroutine = StartCoroutine(KnockbackRoutine(data.KnockbackDirection, data.KnockbackForce));
         }
 
         // 피격 플래시
@@ -181,6 +183,12 @@ public class EnemyController : MonoBehaviour, IDamageable
         if (_renderer != null)
             _renderer.material.color = _originalColor;
 
+        if (_knockbackCoroutine != null)
+        {
+            StopCoroutine(_knockbackCoroutine);
+            _knockbackCoroutine = null;
+        }
+
         if (!Agent.enabled)
             Agent.enabled = true;
 
@@ -205,5 +213,46 @@ public class EnemyController : MonoBehaviour, IDamageable
         if (_renderer != null)
             _renderer.material.color = IsAlive ? _originalColor : Color.gray;
         _flashCoroutine = null;
+    }
+
+    /// <summary>
+    /// NavMeshAgent를 일시 정지하고 부드럽게 넉백 이동시킵니다.
+    /// velocity를 직접 설정하는 방식과 달리 누적되지 않으며,
+    /// 종료 시 NavMeshAgent를 정상 복귀시킵니다.
+    /// </summary>
+    private System.Collections.IEnumerator KnockbackRoutine(Vector3 direction, float force)
+    {
+        const float duration = 0.2f;
+
+        // NavMeshAgent 일시 정지
+        bool wasStopped = Agent.isStopped;
+        Agent.isStopped = true;
+        Agent.velocity = Vector3.zero;
+        Agent.ResetPath();
+
+        // Y축 무시 (수평 넉백만)
+        direction.y = 0f;
+        direction = direction.normalized;
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            // 시간에 따라 강도 감소 (강 → 약)
+            float t = elapsed / duration;
+            float currentForce = force * (1f - t);
+
+            // NavMeshAgent.Move는 NavMesh 위에서만 이동 (벽을 뚫지 않음)
+            Vector3 movement = direction * currentForce * Time.deltaTime;
+            Agent.Move(movement);
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        // NavMeshAgent 재개
+        if (Agent.enabled && IsAlive)
+            Agent.isStopped = wasStopped;
+
+        _knockbackCoroutine = null;
     }
 }

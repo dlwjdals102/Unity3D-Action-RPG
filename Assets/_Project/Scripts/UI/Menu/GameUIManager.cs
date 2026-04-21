@@ -144,7 +144,9 @@ public class GameUIManager : MonoBehaviour
 
         if (_pausePanel != null) _pausePanel.SetActive(true);
 
-        Time.timeScale = 0f;
+        // 게임 상태를 Paused로 전환 (timeScale은 GameManager가 관리)
+        if (GameManager.HasInstance)
+            GameManager.Instance.PauseGame();
 
         // 이동 정지 + 입력 억제
         GameObject player = GameObject.FindGameObjectWithTag(Define.Tag.Player);
@@ -176,7 +178,9 @@ public class GameUIManager : MonoBehaviour
 
         if (_pausePanel != null) _pausePanel.SetActive(false);
 
-        Time.timeScale = 1f;
+        // 게임 상태를 Playing으로 복귀
+        if (GameManager.HasInstance)
+            GameManager.Instance.ResumeGame();
 
         // 입력 억제 해제 + 버퍼 클리어
         GameObject player = GameObject.FindGameObjectWithTag(Define.Tag.Player);

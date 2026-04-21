@@ -16,6 +16,7 @@ MonoBehaviour:
   maxHp: 100
   attackDamage: 10
   attackRange: 2
+  stopChaseRange: 1.5
   attackCooldown: 2
   moveSpeed: 3
   knockbackForce: 3

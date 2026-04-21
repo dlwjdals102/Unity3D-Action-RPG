@@ -84,9 +84,10 @@ public abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour
     {
         if (_instance == this as T)
         {
-            _isQuitting = true;
             OnSingletonDestroy();
             _instance = null;
+            // _isQuitting은 ApplicationQuit에서만 설정
+            // 씬 전환 시에는 false 유지하여 새 씬에서 재탐색 가능
         }
     }
 

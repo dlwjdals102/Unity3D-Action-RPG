@@ -152,6 +152,11 @@ public class GameManager : Singleton<GameManager>
     /// <summary>지정된 씬을 비동기 로드합니다.</summary>
     public void LoadScene(string sceneName)
     {
+        // 씬 전환 전 이벤트 정리 (이전 씬 오브젝트의 stale 참조 방지)
+        OnEnemyKilled = null;
+        OnPlayerDeath = null;
+        OnGameStateChanged = null;
+
         CurrentState = Define.GameState.Loading;
         Time.timeScale = 1f;
         SceneManager.LoadSceneAsync(sceneName);

@@ -17,6 +17,8 @@ public class EnemyData : ScriptableObject
     public float maxHp = 100f;
     public float attackDamage = 10f;
     public float attackRange = 2f;
+    [Tooltip("이 거리 안에서는 추적을 멈춥니다. attackRange보다 약간 짧게 설정 권장")]
+    public float stopChaseRange = 1.5f;
     public float attackCooldown = 2f;
     public float moveSpeed = 3f;
     public float knockbackForce = 3f;
