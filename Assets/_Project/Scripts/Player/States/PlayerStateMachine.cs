@@ -3,17 +3,19 @@ using UnityEngine;
 /// <summary>
 /// 플레이어의 상태머신 중앙 관리자.
 /// 현재 상태를 추적하고 상태 전환을 처리한다.
-/// 각 상태는 이 클래스를 통해 다른 컴포넌트(Controller, Movement, Animator)에 접근한다.
+/// 각 상태는 이 클래스를 통해 다른 컴포넌트(Controller, Movement, Animator, Attacker)에 접근한다.
 /// </summary>
 [RequireComponent(typeof(PlayerController))]
 [RequireComponent(typeof(PlayerMovement))]
 [RequireComponent(typeof(PlayerAnimator))]
+[RequireComponent(typeof(PlayerAttacker))]
 public class PlayerStateMachine : MonoBehaviour
 {
     // === Component References (각 상태가 접근) ===
     public PlayerController Controller { get; private set; }
     public PlayerMovement Movement { get; private set; }
     public PlayerAnimator Animator { get; private set; }
+    public PlayerAttacker Attacker { get; private set; }
 
     // === State Instances (1번만 생성, 재사용) ===
     public IdleState IdleState { get; private set; }
@@ -22,6 +24,7 @@ public class PlayerStateMachine : MonoBehaviour
     public FallState FallState { get; private set; }
     public LandState LandState { get; private set; }
     public DodgeState DodgeState { get; private set; }
+    public AttackState AttackState { get; private set; }
 
     // === Current State ===
     public PlayerStateBase CurrentState { get; private set; }
@@ -32,6 +35,7 @@ public class PlayerStateMachine : MonoBehaviour
         Controller = GetComponent<PlayerController>();
         Movement = GetComponent<PlayerMovement>();
         Animator = GetComponent<PlayerAnimator>();
+        Attacker = GetComponent<PlayerAttacker>();
 
         // 상태 인스턴스 생성
         IdleState = new IdleState(this);
@@ -40,6 +44,7 @@ public class PlayerStateMachine : MonoBehaviour
         FallState = new FallState(this);
         LandState = new LandState(this);
         DodgeState = new DodgeState(this);
+        AttackState = new AttackState(this);
     }
 
     private void Start()

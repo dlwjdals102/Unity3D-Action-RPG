@@ -20,6 +20,8 @@ public class PlayerAnimator : MonoBehaviour
     private static readonly int FallTriggerHash = Animator.StringToHash("Fall");
     private static readonly int LandTriggerHash = Animator.StringToHash("Land");
     private static readonly int LocomotionTriggerHash = Animator.StringToHash("Locomotion");
+    private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
+    private static readonly int ComboIndexHash = Animator.StringToHash("ComboIndex");
 
     // === Animation Settings ===
     [Header("Animation")]
@@ -31,10 +33,14 @@ public class PlayerAnimator : MonoBehaviour
     // === Animation Event Flags ===
     private bool _landFinished;
     private bool _dodgeFinished;
+    private bool _comboWindowOpen;
+    private bool _attackFinished;
 
     // === Public Properties ===
     public bool IsLandFinished => _landFinished;
     public bool IsDodgeFinished => _dodgeFinished;
+    public bool IsComboWindowOpen => _comboWindowOpen;
+    public bool IsAttackFinished => _attackFinished;
 
     private void Awake()
     {
@@ -132,11 +138,26 @@ public class PlayerAnimator : MonoBehaviour
         _animator.SetTrigger(LocomotionTriggerHash);
     }
 
+    /// <summary>
+    /// 공격 애니메이션 재생 (Trigger + ComboIndex).
+    /// AttackState 가 콤보 인덱스 (0, 1, 2) 를 넘기면 해당 콤보 노드로 트랜지션.
+    /// 호출 시 콤보 윈도우 + 공격 종료 플래그를 자동으로 false 로 리셋.
+    /// </summary>
+    public void PlayAttack(int comboIndex)
+    {
+        _comboWindowOpen = false;
+        _attackFinished = false;
+
+        if (_animator == null) return;
+        ResetAllTriggers();
+        _animator.SetInteger(ComboIndexHash, comboIndex);
+        _animator.SetTrigger(AttackTriggerHash);
+    }
+
     // === Animation Event Callbacks ===
 
     /// <summary>
-    /// Land 애니메이션 종료 시점에 호출 (PlayerAnimationEventReceiver 가 라우팅).
-    /// Mixamo Hard Landing 클립의 끝 부분에 Animation Event 로 설정된다.
+    /// Land 애니메이션 종료 시점에 호출.
     /// </summary>
     public void OnLandAnimationFinished()
     {
@@ -144,12 +165,40 @@ public class PlayerAnimator : MonoBehaviour
     }
 
     /// <summary>
-    /// Dodge 애니메이션 종료 시점에 호출 (PlayerAnimationEventReceiver 가 라우팅).
-    /// Mixamo Roll 클립의 끝 부분에 Animation Event 로 설정된다.
+    /// Dodge 애니메이션 종료 시점에 호출.
     /// </summary>
     public void OnDodgeAnimationFinished()
     {
         _dodgeFinished = true;
+    }
+
+    /// <summary>
+    /// 공격 콤보 윈도우 시작 시점에 호출.
+    /// 이 시점부터 다음 콤보 입력 (좌클릭) 을 받을 수 있다.
+    /// </summary>
+    public void OnComboWindowOpened()
+    {
+        _comboWindowOpen = true;
+    }
+
+    /// <summary>
+    /// 공격 콤보 윈도우 종료 시점에 호출.
+    /// 이 시점부터는 다음 콤보 입력을 받지 않는다.
+    /// </summary>
+    public void OnComboWindowClosed()
+    {
+        _comboWindowOpen = false;
+    }
+
+    /// <summary>
+    /// 공격 애니메이션 전체 종료 시점에 호출.
+    /// 콤보 윈도우 안에 다음 입력이 없었으면 AttackState 가 이 신호로 종료.
+    /// 안전장치로 콤보 윈도우도 함께 닫는다.
+    /// </summary>
+    public void OnAttackAnimationFinished()
+    {
+        _attackFinished = true;
+        _comboWindowOpen = false;
     }
 
     // === Internal Helpers ===

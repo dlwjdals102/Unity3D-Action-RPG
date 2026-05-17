@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 플레이어 이동 상태 (걷기/뛰기).
-/// 카메라 기준 방향으로 이동하며 입력에 따라 DodgeState, JumpState, IdleState 로,
+/// 카메라 기준 방향으로 이동하며 입력에 따라 DodgeState, AttackState, JumpState, IdleState 로,
 /// 공중 감지 시 FallState 로 자동 전환된다.
 /// 진입 시 Animator 를 Locomotion 상태로 명시적 전환한다.
 /// </summary>
@@ -34,14 +34,21 @@ public class MoveState : PlayerStateBase
             return;
         }
 
-        // 3. 점프 입력 → JumpState
+        // 3. 공격 입력 → AttackState (전투 게임 우선)
+        if (_stateMachine.Controller.AttackRequested)
+        {
+            _stateMachine.ChangeState(_stateMachine.AttackState);
+            return;
+        }
+
+        // 4. 점프 입력 → JumpState
         if (_stateMachine.Controller.JumpRequested)
         {
             _stateMachine.ChangeState(_stateMachine.JumpState);
             return;
         }
 
-        // 4. 입력 없음 → IdleState
+        // 5. 입력 없음 → IdleState
         Vector2 input = _stateMachine.Controller.MoveInput;
         if (input.sqrMagnitude < MoveInputThreshold)
         {
@@ -49,7 +56,7 @@ public class MoveState : PlayerStateBase
             return;
         }
 
-        // 5. 이동 처리 (기본 행동)
+        // 6. 이동 처리 (기본 행동)
         Vector3 moveDirection = _stateMachine.Movement.GetCameraRelativeDirection(input);
 
         bool isSprinting = _stateMachine.Controller.IsSprintHeld;
@@ -62,8 +69,5 @@ public class MoveState : PlayerStateBase
 
         float normalizedSpeed = isSprinting ? 1f : 0.5f;
         _stateMachine.Animator.SetMoveSpeed(normalizedSpeed);
-
-        // 다음 단계에서 추가될 전환:
-        // - 좌클릭 → AttackState (Week 3 후반)
     }
 }

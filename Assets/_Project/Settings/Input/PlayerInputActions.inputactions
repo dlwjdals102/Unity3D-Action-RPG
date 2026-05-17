@@ -52,7 +52,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "New action",
+                    "name": "Attack",
                     "type": "Button",
                     "id": "eba384a1-748d-436a-9466-027b4d784bb9",
                     "expectedControlType": "",
@@ -164,11 +164,11 @@
                 {
                     "name": "",
                     "id": "6ff47954-fc7a-4079-b47c-d4789d5a7e14",
-                    "path": "",
+                    "path": "<Mouse>/leftButton",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "New action",
+                    "action": "Attack",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 플레이어 대기 상태.
-/// 입력에 따라 DodgeState, JumpState, MoveState 로 전환되며,
+/// 입력에 따라 DodgeState, AttackState, JumpState, MoveState 로 전환되며,
 /// 공중 감지 시 FallState 로 자동 전환된다.
 /// 진입 시 Animator 를 Locomotion 상태로 명시적 전환한다.
 /// </summary>
@@ -34,14 +34,21 @@ public class IdleState : PlayerStateBase
             return;
         }
 
-        // 3. 점프 입력 → JumpState
+        // 3. 공격 입력 → AttackState (전투 게임 우선)
+        if (_stateMachine.Controller.AttackRequested)
+        {
+            _stateMachine.ChangeState(_stateMachine.AttackState);
+            return;
+        }
+
+        // 4. 점프 입력 → JumpState
         if (_stateMachine.Controller.JumpRequested)
         {
             _stateMachine.ChangeState(_stateMachine.JumpState);
             return;
         }
 
-        // 4. 이동 입력 → MoveState
+        // 5. 이동 입력 → MoveState
         Vector2 moveInput = _stateMachine.Controller.MoveInput;
         if (moveInput.sqrMagnitude > MoveInputThreshold)
         {
@@ -49,10 +56,7 @@ public class IdleState : PlayerStateBase
             return;
         }
 
-        // 5. 입력 없음: Idle 애니메이션 유지 (매 프레임 댐핑)
+        // 6. 입력 없음: Idle 애니메이션 유지 (매 프레임 댐핑)
         _stateMachine.Animator.SetMoveSpeed(0f);
-
-        // 다음 단계에서 추가될 전환:
-        // - 좌클릭 → AttackState (Week 3 후반)
     }
 }

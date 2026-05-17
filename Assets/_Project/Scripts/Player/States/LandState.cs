@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 플레이어 착지 상태.
-/// Land 애니메이션을 트리거하고, 입력(회피/점프/이동) 또는 Animation Event 기반으로
+/// Land 애니메이션을 트리거하고, 입력(회피/공격/점프/이동) 또는 Animation Event 기반으로
 /// 다른 상태로 전환한다. 확실한 시그널만 신뢰하며 임의의 타이머는 사용하지 않는다.
 /// </summary>
 public class LandState : PlayerStateBase
@@ -33,14 +33,21 @@ public class LandState : PlayerStateBase
             return;
         }
 
-        // 3. 점프 입력 → JumpState (점프 캔슬)
+        // 3. 공격 입력 → AttackState (전투 게임 우선)
+        if (_stateMachine.Controller.AttackRequested)
+        {
+            _stateMachine.ChangeState(_stateMachine.AttackState);
+            return;
+        }
+
+        // 4. 점프 입력 → JumpState (점프 캔슬)
         if (_stateMachine.Controller.JumpRequested)
         {
             _stateMachine.ChangeState(_stateMachine.JumpState);
             return;
         }
 
-        // 4. 이동 입력 → MoveState (이동 캔슬)
+        // 5. 이동 입력 → MoveState (이동 캔슬)
         Vector2 input = _stateMachine.Controller.MoveInput;
         if (input.sqrMagnitude > MoveInputThreshold)
         {
@@ -48,13 +55,10 @@ public class LandState : PlayerStateBase
             return;
         }
 
-        // 5. Animation Event 기반 종료 → IdleState
+        // 6. Animation Event 기반 종료 → IdleState
         if (_stateMachine.Animator.IsLandFinished)
         {
             _stateMachine.ChangeState(_stateMachine.IdleState);
         }
-
-        // 다음 단계에서 추가될 전환:
-        // - 좌클릭 → AttackState (Week 3 후반)
     }
 }
