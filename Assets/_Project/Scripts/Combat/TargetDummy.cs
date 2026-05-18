@@ -10,6 +10,10 @@ public class TargetDummy : MonoBehaviour, IDamageable
     [Header("Health")]
     [SerializeField] private int _maxHealth = 100;
 
+    [Header("Damage Text")]
+    [Tooltip("데미지 텍스트가 표시될 머리 위 높이")]
+    [SerializeField] private float _damageTextHeight = 2f;
+
     private int _currentHealth;
 
     // === Public Properties ===
@@ -34,7 +38,9 @@ public class TargetDummy : MonoBehaviour, IDamageable
         _currentHealth -= info.Amount;
         if (_currentHealth < 0) _currentHealth = 0;
 
-        Debug.Log($"[TargetDummy] Took {info.Amount} damage. HP: {_currentHealth}/{_maxHealth}");
+        // 머리 위에 데미지 텍스트 생성 (콤보 시 가독성을 위한 표준 패턴)
+        Vector3 textPosition = transform.position + Vector3.up * _damageTextHeight;
+        DamageTextManager.Instance?.Spawn(info.Amount, textPosition);
 
         if (IsDead)
         {

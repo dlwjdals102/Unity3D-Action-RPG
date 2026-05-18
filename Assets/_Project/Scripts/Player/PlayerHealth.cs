@@ -10,6 +10,10 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     [Header("Health")]
     [SerializeField] private int _maxHealth = 100;
 
+    [Header("Damage Text")]
+    [Tooltip("데미지 텍스트가 표시될 머리 위 높이")]
+    [SerializeField] private float _damageTextHeight = 1.8f;
+
     private int _currentHealth;
 
     // === Public Properties ===
@@ -28,17 +32,15 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     /// </summary>
     public void TakeDamage(DamageInfo info)
     {
-        // 이미 사망한 상태면 무시
         if (IsDead) return;
-
-        // 양수 데미지만 처리 (회복은 별도 메서드로 처리 예정)
         if (info.Amount <= 0) return;
 
-        // 체력 감소 (0 미만 방지)
         _currentHealth -= info.Amount;
         if (_currentHealth < 0) _currentHealth = 0;
 
-        Debug.Log($"[PlayerHealth] Took {info.Amount} damage. HP: {_currentHealth}/{_maxHealth}");
+        // 머리 위에 데미지 텍스트 생성
+        Vector3 textPosition = transform.position + Vector3.up * _damageTextHeight;
+        DamageTextManager.Instance?.Spawn(info.Amount, textPosition);
 
         // 사망 처리 (지금은 로그만, 미래 확장 예정)
         if (IsDead)

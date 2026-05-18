@@ -3,12 +3,13 @@ using UnityEngine;
 /// <summary>
 /// 플레이어의 상태머신 중앙 관리자.
 /// 현재 상태를 추적하고 상태 전환을 처리한다.
-/// 각 상태는 이 클래스를 통해 다른 컴포넌트(Controller, Movement, Animator, Attacker)에 접근한다.
+/// 각 상태는 이 클래스를 통해 다른 컴포넌트(Controller, Movement, Animator, Attacker, Stamina)에 접근한다.
 /// </summary>
 [RequireComponent(typeof(PlayerController))]
 [RequireComponent(typeof(PlayerMovement))]
 [RequireComponent(typeof(PlayerAnimator))]
 [RequireComponent(typeof(PlayerAttacker))]
+[RequireComponent(typeof(PlayerStamina))]
 public class PlayerStateMachine : MonoBehaviour
 {
     // === Component References (각 상태가 접근) ===
@@ -16,6 +17,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerMovement Movement { get; private set; }
     public PlayerAnimator Animator { get; private set; }
     public PlayerAttacker Attacker { get; private set; }
+    public PlayerStamina Stamina { get; private set; }
 
     // === State Instances (1번만 생성, 재사용) ===
     public IdleState IdleState { get; private set; }
@@ -36,6 +38,7 @@ public class PlayerStateMachine : MonoBehaviour
         Movement = GetComponent<PlayerMovement>();
         Animator = GetComponent<PlayerAnimator>();
         Attacker = GetComponent<PlayerAttacker>();
+        Stamina = GetComponent<PlayerStamina>();
 
         // 상태 인스턴스 생성
         IdleState = new IdleState(this);

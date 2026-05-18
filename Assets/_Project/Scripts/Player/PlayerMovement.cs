@@ -2,8 +2,8 @@ using UnityEngine;
 
 /// <summary>
 /// 플레이어의 이동에 필요한 공통 기능을 제공하는 컴포넌트.
-/// 매 프레임 공통 작업(지면 감지, 중력 누적, 쿨다운 갱신)을 수행하고,
-/// 상태(IdleState, MoveState 등)가 호출할 Public API 를 제공한다.
+/// 매 프레임 공통 작업 (지면 감지, 중력 누적, 쿨다운 갱신) 을 수행하고,
+/// 상태 (IdleState, MoveState 등) 가 호출할 Public API 를 제공한다.
 /// Move 호출은 LateUpdate 에서 1번만 수행하여 누적된 속도를 일괄 적용한다.
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
@@ -38,6 +38,17 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _dodgeSpeed = 7f;
     [SerializeField] private float _dodgeCooldown = 0.2f;
 
+    // === Stamina Cost ===
+    [Header("Stamina Cost")]
+    [Tooltip("회피 시 소모되는 스태미나")]
+    [SerializeField] private float _dodgeStaminaCost = 25f;
+
+    [Tooltip("달리기 시 초당 소모되는 스태미나")]
+    [SerializeField] private float _sprintStaminaCostPerSecond = 10f;
+
+    [Tooltip("새로 달리기 시작에 필요한 최소 스태미나")]
+    [SerializeField] private float _minStaminaToStartSprint = 20f;
+
     // === Ground Check ===
     [Header("Ground Check")]
     [SerializeField] private float _groundCheckRadius = 0.25f;
@@ -55,6 +66,9 @@ public class PlayerMovement : MonoBehaviour
     public float RotationSpeed => _rotationSpeed;
     public float DodgeSpeed => _dodgeSpeed;
     public float DodgeCooldown => _dodgeCooldown;
+    public float DodgeStaminaCost => _dodgeStaminaCost;
+    public float SprintStaminaCostPerSecond => _sprintStaminaCostPerSecond;
+    public float MinStaminaToStartSprint => _minStaminaToStartSprint;
     public bool IsGrounded => _isGrounded;
     public bool CanDodge => _dodgeTimer <= 0f;
     public Vector3 VerticalVelocity => _verticalVelocity;

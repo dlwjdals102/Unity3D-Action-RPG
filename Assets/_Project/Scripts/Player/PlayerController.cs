@@ -55,6 +55,9 @@ public class PlayerController : MonoBehaviour
         _inputActions.Player.Dodge.performed += ctx => OnDodgePressed();
         _inputActions.Player.Jump.performed += ctx => OnJumpPressed();
         _inputActions.Player.Attack.performed += ctx => OnAttackPressed();
+
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
     }
 
     private void OnEnable()

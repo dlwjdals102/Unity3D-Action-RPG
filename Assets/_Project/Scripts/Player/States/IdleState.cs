@@ -5,6 +5,7 @@ using UnityEngine;
 /// 입력에 따라 DodgeState, AttackState, JumpState, MoveState 로 전환되며,
 /// 공중 감지 시 FallState 로 자동 전환된다.
 /// 진입 시 Animator 를 Locomotion 상태로 명시적 전환한다.
+/// 회피/공격 입력은 스태미나 충분 시에만 처리.
 /// </summary>
 public class IdleState : PlayerStateBase
 {
@@ -28,14 +29,19 @@ public class IdleState : PlayerStateBase
         }
 
         // 2. 회피 입력 → DodgeState (소울라이크 표준: 회피 최우선)
-        if (_stateMachine.Controller.DodgeRequested && _stateMachine.Movement.CanDodge)
+        // 스태미나 충분 시에만 회피 가능. TryConsume 으로 가능 체크 + 소모 동시 처리.
+        if (_stateMachine.Controller.DodgeRequested &&
+            _stateMachine.Movement.CanDodge &&
+            _stateMachine.Stamina.TryConsume(_stateMachine.Movement.DodgeStaminaCost))
         {
             _stateMachine.ChangeState(_stateMachine.DodgeState);
             return;
         }
 
         // 3. 공격 입력 → AttackState (전투 게임 우선)
-        if (_stateMachine.Controller.AttackRequested)
+        // 1타 비용을 진입 시 소모. AttackState 의 OnEnter 는 별도 소모 안 함.
+        if (_stateMachine.Controller.AttackRequested &&
+            _stateMachine.Stamina.TryConsume(_stateMachine.Attacker.GetComboStaminaCost(0)))
         {
             _stateMachine.ChangeState(_stateMachine.AttackState);
             return;
