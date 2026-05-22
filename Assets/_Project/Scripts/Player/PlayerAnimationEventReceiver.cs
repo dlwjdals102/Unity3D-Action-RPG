@@ -7,6 +7,7 @@ using UnityEngine;
 /// 라우팅 대상:
 /// - PlayerAnimator: 애니메이션 종료 추적 (Land, Dodge, Attack 등)
 /// - PlayerAttacker: 공격 타격 처리 (OnAttackHit)
+/// - PlayerHealth: 회피 무적 상태 설정 (OnDodgeInvincibleStart/End)
 /// 
 /// 향후 다른 Animation Event (예: Footstep → SoundManager) 도 같은 패턴으로 추가 가능.
 /// </summary>
@@ -14,11 +15,13 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
 {
     private PlayerAnimator _playerAnimator;
     private PlayerAttacker _playerAttacker;
+    private PlayerHealth _playerHealth;
 
     private void Awake()
     {
         _playerAnimator = GetComponentInParent<PlayerAnimator>();
         _playerAttacker = GetComponentInParent<PlayerAttacker>();
+        _playerHealth = GetComponentInParent<PlayerHealth>();
 
         if (_playerAnimator == null)
         {
@@ -28,6 +31,11 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
         if (_playerAttacker == null)
         {
             Debug.LogError("[PlayerAnimationEventReceiver] PlayerAttacker not found in parent!");
+        }
+
+        if (_playerHealth == null)
+        {
+            Debug.LogError("[PlayerAnimationEventReceiver] PlayerHealth not found in parent!");
         }
     }
 
@@ -46,10 +54,30 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
 
     /// <summary>
     /// Dodge (Roll) 애니메이션의 종료 시점에 호출.
+    /// PlayerHealth 의 무적 안전망 (Animation Event 누락 시 무적 누적 방지).
     /// </summary>
     public void OnDodgeAnimationEnd()
     {
         _playerAnimator?.OnDodgeAnimationFinished();
+        _playerHealth?.SetInvincible(false);  // 안전망
+    }
+
+    /// <summary>
+    /// 회피 무적 시작 시점에 호출.
+    /// Roll 클립의 무적 시작 지점에 Animation Event 로 설정.
+    /// </summary>
+    public void OnDodgeInvincibleStart()
+    {
+        _playerHealth?.SetInvincible(true);
+    }
+
+    /// <summary>
+    /// 회피 무적 종료 시점에 호출.
+    /// Roll 클립의 무적 종료 지점에 Animation Event 로 설정.
+    /// </summary>
+    public void OnDodgeInvincibleEnd()
+    {
+        _playerHealth?.SetInvincible(false);
     }
 
     /// <summary>

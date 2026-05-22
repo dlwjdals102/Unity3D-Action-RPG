@@ -35,8 +35,6 @@ public class PlayerStamina : MonoBehaviour
 
     private void Update()
     {
-        Debug.Log("_currentStamina : " + _currentStamina);
-
         // 회복 지연 타이머
         if (_regenTimer > 0f)
         {
