@@ -25,10 +25,10 @@ public class EnemyPatrolState : EnemyStateBase
 
     public override void OnUpdate()
     {
-        // 1. 시야 감지: Target 이 시야 안 → EnemyChaseState 전환
+        // 1. 시야 감지: Target 이 시야 안 → 추격 전환 (파생이 대상 결정)
         if (_stateMachine.CanSeeTarget())
         {
-            _stateMachine.ChangeState(_stateMachine.ChaseState);
+            _stateMachine.ToChase();
             return;
         }
 

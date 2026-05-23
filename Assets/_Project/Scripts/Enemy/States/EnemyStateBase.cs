@@ -5,16 +5,20 @@ using UnityEngine;
 /// 각 구체 상태 (EnemyPatrolState, EnemyChaseState 등) 는 이 클래스를 상속받아
 /// OnEnter, OnUpdate, OnExit 를 필요에 따라 오버라이드한다.
 /// PlayerStateBase 와 같은 패턴.
+/// 
+/// _stateMachine 은 EnemyStateMachineBase 타입이라 근접/원거리 등 모든 파생에서 재사용 가능.
+/// 상태 전환은 인스턴스 직접 참조 대신 전환 의도 메서드 (ToChase, ToAttack, ToPatrol) 를 호출한다.
 /// </summary>
 public abstract class EnemyStateBase
 {
-    // 모든 상태가 상태머신에 접근 가능 (다른 상태로 전환할 때 필요)
-    protected EnemyStateMachine _stateMachine;
+    // 모든 상태가 상태머신에 접근 가능 (전환, 컴포넌트 참조 등)
+    // 베이스 타입이라 근접/원거리 등 모든 파생 상태머신에서 동작.
+    protected EnemyStateMachineBase _stateMachine;
 
     /// <summary>
     /// 생성자에서 상태머신 참조를 주입받는다.
     /// </summary>
-    public EnemyStateBase(EnemyStateMachine stateMachine)
+    public EnemyStateBase(EnemyStateMachineBase stateMachine)
     {
         _stateMachine = stateMachine;
     }

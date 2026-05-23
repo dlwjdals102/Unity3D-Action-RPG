@@ -69,8 +69,8 @@ public class EnemyAttackState : EnemyStateBase
         }
         else
         {
-            // 멀어짐: Chase 복귀
-            _stateMachine.ChangeState(_stateMachine.ChaseState);
+            // 멀어짐: 추격 복귀 (파생이 대상 결정)
+            _stateMachine.ToChase();
         }
     }
 }

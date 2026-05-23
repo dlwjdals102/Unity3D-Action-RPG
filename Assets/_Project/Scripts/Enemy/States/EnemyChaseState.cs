@@ -26,17 +26,17 @@ public class EnemyChaseState : EnemyStateBase
 
         float distance = _stateMachine.Movement.DistanceTo(_stateMachine.Target.position);
 
-        // 1. 공격 거리 도달 시 → EnemyAttackState 전환
+        // 1. 공격 거리 도달 시 → 공격 전환 (파생이 대상 결정)
         if (distance < _stateMachine.AttackRange)
         {
-            _stateMachine.ChangeState(_stateMachine.AttackState);
+            _stateMachine.ToAttack();
             return;
         }
 
-        // 2. 추격 포기 거리 초과 시 → EnemyPatrolState 복귀
+        // 2. 추격 포기 거리 초과 시 → 순찰 복귀 (파생이 대상 결정)
         if (distance > _stateMachine.GiveUpRange)
         {
-            _stateMachine.ChangeState(_stateMachine.PatrolState);
+            _stateMachine.ToPatrol();
             return;
         }
 
