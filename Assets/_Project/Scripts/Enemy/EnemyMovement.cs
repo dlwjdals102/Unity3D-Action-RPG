@@ -6,6 +6,10 @@ using UnityEngine.AI;
 /// 상태 (PatrolState, ChaseState, AttackState 등) 가 호출할 Public API 제공.
 /// 단일 책임: 적의 이동 + 회전.
 /// 
+/// 수치 데이터 (WalkSpeed, ChaseSpeed) 는 EnemyConfig 에서 읽는다.
+/// stoppingDistance 는 Config.AttackRange 와 동기화 (단일 출처).
+/// _rotationSpeed 는 시각 느낌이라 컴포넌트가 보유.
+/// 
 /// PlayerMovement 와 본질이 다름:
 /// - 입력 없음 (AI 결정)
 /// - 점프/중력 없음 (NavMesh 평면)
@@ -14,25 +18,19 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class EnemyMovement : MonoBehaviour
 {
-    [Header("Movement")]
-    [Tooltip("Patrol 시 이동 속도")]
-    [SerializeField] private float _walkSpeed = 2f;
-
-    [Tooltip("Chase 시 이동 속도")]
-    [SerializeField] private float _chaseSpeed = 4f;
-
-    [Tooltip("공격 거리 (이 거리 이내면 정지)")]
-    [SerializeField] private float _stoppingDistance = 1.5f;
+    [Header("Config")]
+    [Tooltip("적의 수치 데이터 (속도, 공격 거리 등)")]
+    [SerializeField] private EnemyConfig _config;
 
     [Header("Rotation")]
-    [Tooltip("LookAt 호출 시 회전 속도 (Slerp 보간)")]
+    [Tooltip("LookAt 호출 시 회전 속도 (Slerp 보간). 시각 느낌이라 Config 와 분리")]
     [SerializeField] private float _rotationSpeed = 8f;
 
     private NavMeshAgent _agent;
 
     // === Public Properties (상태가 접근) ===
-    public float WalkSpeed => _walkSpeed;
-    public float ChaseSpeed => _chaseSpeed;
+    public float WalkSpeed => _config != null ? _config.WalkSpeed : 0f;
+    public float ChaseSpeed => _config != null ? _config.ChaseSpeed : 0f;
     public bool IsMoving => _agent.velocity.sqrMagnitude > 0.01f;
     public float CurrentSpeed => _agent.velocity.magnitude;
     public Vector3 Velocity => _agent.velocity;
@@ -40,7 +38,16 @@ public class EnemyMovement : MonoBehaviour
     private void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();
-        _agent.stoppingDistance = _stoppingDistance;
+
+        if (_config == null)
+        {
+            Debug.LogError($"[EnemyMovement] EnemyConfig not assigned on {gameObject.name}!");
+            return;
+        }
+
+        // stoppingDistance 를 Config.AttackRange 와 동기화 (단일 출처).
+        // 공격 거리 = 정지 거리. 데이터 중복 회피.
+        _agent.stoppingDistance = _config.AttackRange;
     }
 
     // ========================================================================

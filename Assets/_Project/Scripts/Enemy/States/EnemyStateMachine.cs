@@ -5,9 +5,11 @@ using UnityEngine;
 /// 현재 상태를 추적하고 상태 전환을 처리한다.
 /// 각 상태는 이 클래스를 통해 다른 컴포넌트 (Movement, Animator) 와 Target (플레이어) 에 접근한다.
 /// 
+/// 수치 데이터 (AttackRange, Detection 등) 는 EnemyConfig 에서 읽는다.
+/// 인스턴스 참조 (Target, PatrolPoints) 는 컴포넌트가 보유.
+/// 
 /// PlayerStateMachine 과 같은 패턴이지만 단순:
 /// - 입력 출처가 사용자가 아닌 AI 결정 (거리, 시야 등)
-/// - 컴포넌트 참조 적음 (Movement, Animator 만)
 /// - Target (플레이어) 참조로 거리/방향 계산
 /// - 시야 감지 헬퍼 메서드 제공 (모든 상태가 활용)
 /// - EnemyHealth 의 OnDeath/OnDamaged 이벤트 구독 (사망 시 Death, 피격 시 추격)
@@ -17,6 +19,11 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyHealth))]
 public class EnemyStateMachine : MonoBehaviour
 {
+    // === Config ===
+    [Header("Config")]
+    [Tooltip("적의 수치 데이터 (공격 거리, 시야 등)")]
+    [SerializeField] private EnemyConfig _config;
+
     // === Component References (각 상태가 접근) ===
     public EnemyMovement Movement { get; private set; }
     public EnemyAnimator Animator { get; private set; }
@@ -40,27 +47,12 @@ public class EnemyStateMachine : MonoBehaviour
     /// <summary>순찰 경로. PatrolState 가 활용.</summary>
     public Transform[] PatrolPoints => _patrolPoints;
 
-    // === Combat Settings ===
-    [Header("Combat")]
-    [Tooltip("공격 거리. ChaseState 에서 이 거리 이내면 AttackState 전환")]
-    [SerializeField] private float _attackRange = 1.5f;
-
+    // === Config 데이터 접근 Properties (상태가 활용) ===
     /// <summary>공격 거리. ChaseState 와 AttackState 가 활용.</summary>
-    public float AttackRange => _attackRange;
-
-    // === Vision (시야 감지) ===
-    [Header("Vision")]
-    [Tooltip("시야 감지 거리. PatrolState 에서 Target 이 이 거리 안 + 시야각 안이면 ChaseState 전환")]
-    [SerializeField] private float _detectionRange = 8f;
-
-    [Tooltip("시야각 (총 각도, 정면 기준 좌우 절반씩). 90도 = 좌우 45도")]
-    [SerializeField] private float _detectionAngle = 90f;
-
-    [Tooltip("추격 포기 거리. ChaseState 에서 Target 이 이 거리 초과 시 PatrolState 복귀")]
-    [SerializeField] private float _giveUpRange = 15f;
+    public float AttackRange => _config != null ? _config.AttackRange : 0f;
 
     /// <summary>추격 포기 거리. ChaseState 가 활용.</summary>
-    public float GiveUpRange => _giveUpRange;
+    public float GiveUpRange => _config != null ? _config.GiveUpRange : 0f;
 
     // === State Instances ===
     public EnemyPatrolState PatrolState { get; private set; }
@@ -77,6 +69,12 @@ public class EnemyStateMachine : MonoBehaviour
         Movement = GetComponent<EnemyMovement>();
         Animator = GetComponent<EnemyAnimator>();
         _health = GetComponent<EnemyHealth>();
+
+        // Config 검증
+        if (_config == null)
+        {
+            Debug.LogError($"[EnemyStateMachine] EnemyConfig not assigned on {gameObject.name}!");
+        }
 
         // Target 검증
         if (_target == null)
@@ -161,10 +159,10 @@ public class EnemyStateMachine : MonoBehaviour
         if (CurrentState != PatrolState) return;
 
         // 감지 범위 내 피격 시만 추격 (시야각 무관, 거리만)
-        if (_target == null) return;
+        if (_target == null || _config == null) return;
 
         float distance = Vector3.Distance(transform.position, _target.position);
-        if (distance <= _detectionRange)
+        if (distance <= _config.DetectionRange)
         {
             ChangeState(ChaseState);
         }
@@ -176,18 +174,18 @@ public class EnemyStateMachine : MonoBehaviour
 
     /// <summary>
     /// Target 이 시야 안에 있는지 확인.
-    /// 조건: (1) Target 존재 (2) DetectionRange 안 (3) DetectionAngle 안 (정면 기준).
+    /// 조건: (1) Target/Config 존재 (2) DetectionRange 안 (3) DetectionAngle 안 (정면 기준).
     /// 미래: 장애물 Raycast 추가 가능.
     /// </summary>
     public bool CanSeeTarget()
     {
-        if (_target == null) return false;
+        if (_target == null || _config == null) return false;
 
         Vector3 toTarget = _target.position - transform.position;
         float distance = toTarget.magnitude;
 
         // 1. 거리 안
-        if (distance > _detectionRange) return false;
+        if (distance > _config.DetectionRange) return false;
 
         // 2. 시야각 안 (수평 평면)
         toTarget.y = 0;
@@ -197,7 +195,7 @@ public class EnemyStateMachine : MonoBehaviour
         if (toTarget.sqrMagnitude < 0.01f) return true;  // 너무 가까움 (각도 계산 불가) → 발견
 
         float angle = Vector3.Angle(forward, toTarget);
-        return angle < _detectionAngle / 2f;
+        return angle < _config.DetectionAngle / 2f;
     }
 
     // ========================================================================
@@ -225,23 +223,26 @@ public class EnemyStateMachine : MonoBehaviour
             }
         }
 
+        // Config 없으면 거리 시각화 생략 (에디터에서 Config 할당 전 안전)
+        if (_config == null) return;
+
         // 공격 거리 시각화 (빨간 원)
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(transform.position, _attackRange);
+        Gizmos.DrawWireSphere(transform.position, _config.AttackRange);
 
         // 시야 감지 거리 시각화 (노란 원)
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, _detectionRange);
+        Gizmos.DrawWireSphere(transform.position, _config.DetectionRange);
 
         // 추격 포기 거리 시각화 (주황 원)
         Gizmos.color = new Color(1f, 0.5f, 0f);
-        Gizmos.DrawWireSphere(transform.position, _giveUpRange);
+        Gizmos.DrawWireSphere(transform.position, _config.GiveUpRange);
 
         // 시야각 시각화 (정면 + 좌우 각도 선)
         Gizmos.color = Color.cyan;
-        Vector3 forward = transform.forward * _detectionRange;
-        Quaternion leftRot = Quaternion.AngleAxis(-_detectionAngle / 2f, Vector3.up);
-        Quaternion rightRot = Quaternion.AngleAxis(_detectionAngle / 2f, Vector3.up);
+        Vector3 forward = transform.forward * _config.DetectionRange;
+        Quaternion leftRot = Quaternion.AngleAxis(-_config.DetectionAngle / 2f, Vector3.up);
+        Quaternion rightRot = Quaternion.AngleAxis(_config.DetectionAngle / 2f, Vector3.up);
         Gizmos.DrawRay(transform.position, leftRot * forward);
         Gizmos.DrawRay(transform.position, rightRot * forward);
     }
