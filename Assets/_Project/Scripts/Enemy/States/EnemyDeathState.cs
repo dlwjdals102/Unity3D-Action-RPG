@@ -15,7 +15,7 @@ using UnityEngine;
 /// </summary>
 public class EnemyDeathState : EnemyStateBase
 {
-    public EnemyDeathState(EnemyStateMachine stateMachine) : base(stateMachine) { }
+    public EnemyDeathState(EnemyStateMachineBase stateMachine) : base(stateMachine) { }
 
     public override void OnEnter()
     {

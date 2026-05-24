@@ -11,7 +11,7 @@ using UnityEngine;
 /// </summary>
 public class EnemyAttackState : EnemyStateBase
 {
-    public EnemyAttackState(EnemyStateMachine stateMachine) : base(stateMachine) { }
+    public EnemyAttackState(EnemyStateMachineBase stateMachine) : base(stateMachine) { }
 
     public override void OnEnter()
     {

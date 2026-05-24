@@ -12,10 +12,14 @@ public class EnemyPatrolState : EnemyStateBase
     // 현재 향하는 Waypoint 의 인덱스
     private int _currentIndex;
 
-    public EnemyPatrolState(EnemyStateMachine stateMachine) : base(stateMachine) { }
+    public EnemyPatrolState(EnemyStateMachineBase stateMachine) : base(stateMachine) { }
 
     public override void OnEnter()
     {
+        // Patrol 은 Waypoint 가 "경유지" 이므로 stoppingDistance 0 (끝까지 도달).
+        // 공격 거리(AttackRange)를 stoppingDistance 로 쓰면 Waypoint 앞에서 멈춰 갇힘.
+        _stateMachine.Movement.SetStoppingDistance(0f);
+
         // Animator 를 Locomotion 으로 명시적 전환
         _stateMachine.Animator.PlayLocomotion();
 

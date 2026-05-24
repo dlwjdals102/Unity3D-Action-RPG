@@ -10,7 +10,7 @@ using UnityEngine;
 /// 
 /// 단일 책임: 공격 시 타격 감지 + 데미지 전달.
 /// </summary>
-public class EnemyAttacker : MonoBehaviour
+public class EnemyAttacker : MonoBehaviour, IEnemyAttacker
 {
     [Header("Config")]
     [Tooltip("적의 수치 데이터 (데미지 등)")]

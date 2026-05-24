@@ -11,10 +11,14 @@ using UnityEngine;
 /// </summary>
 public class EnemyChaseState : EnemyStateBase
 {
-    public EnemyChaseState(EnemyStateMachine stateMachine) : base(stateMachine) { }
+    public EnemyChaseState(EnemyStateMachineBase stateMachine) : base(stateMachine) { }
 
     public override void OnEnter()
     {
+        // 추격은 공격 거리(AttackRange)에서 멈춤. NavMeshAgent 가 그 거리에서 자동 정지.
+        // (Patrol 의 0 에서 복원 - 각 상태가 자기 stoppingDistance 명시)
+        _stateMachine.Movement.SetStoppingDistance(_stateMachine.AttackRange);
+
         // Animator 를 Locomotion 으로 명시적 전환
         _stateMachine.Animator.PlayLocomotion();
     }

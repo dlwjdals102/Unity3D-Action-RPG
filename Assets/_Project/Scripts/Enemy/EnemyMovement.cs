@@ -26,6 +26,11 @@ public class EnemyMovement : MonoBehaviour
     [Tooltip("LookAt 호출 시 회전 속도 (Slerp 보간). 시각 느낌이라 Config 와 분리")]
     [SerializeField] private float _rotationSpeed = 8f;
 
+    [Header("Patrol")]
+    [Tooltip("Waypoint 도달 판정 거리. 공격 거리(stoppingDistance)와 별개. " +
+             "stoppingDistance 를 재사용하면 원거리 적(공격 거리 큼)이 Waypoint 사이에 갇히므로 분리.")]
+    [SerializeField] private float _waypointArriveDistance = 0.5f;
+
     private NavMeshAgent _agent;
 
     // === Public Properties (상태가 접근) ===
@@ -78,6 +83,20 @@ public class EnemyMovement : MonoBehaviour
     }
 
     /// <summary>
+    /// NavMeshAgent 의 정지 거리를 설정한다.
+    /// 상태별로 다른 의미:
+    /// - PatrolState: 0 (Waypoint 에 가깝게 도달해야 다음으로 진행)
+    /// - ChaseState/AttackState: AttackRange (공격 거리에서 멈춤)
+    /// 
+    /// 같은 stoppingDistance 가 "Waypoint 도달" 과 "공격 거리" 라는
+    /// 상반된 요구를 가지므로, 각 상태가 OnEnter 에서 자기 값을 설정한다.
+    /// </summary>
+    public void SetStoppingDistance(float distance)
+    {
+        _agent.stoppingDistance = distance;
+    }
+
+    /// <summary>
     /// 지정된 위치 향해 부드러운 회전 (Slerp 보간).
     /// 정지 상태에서 플레이어 향하기 등에 사용.
     /// 매 프레임 호출 필요 (Update 또는 상태의 OnUpdate).
@@ -120,7 +139,9 @@ public class EnemyMovement : MonoBehaviour
         if (_agent.pathPending) return false;
         if (!_agent.hasPath) return false;
 
-        return _agent.remainingDistance <= _agent.stoppingDistance;
+        // 공격 거리(stoppingDistance)가 아닌 Waypoint 전용 도달 거리 사용.
+        // (원거리 적의 큰 stoppingDistance 로 인한 "Waypoint 사이 갇힘" 방지)
+        return _agent.remainingDistance <= _waypointArriveDistance;
     }
 
     /// <summary>

@@ -7,34 +7,33 @@ using UnityEngine;
 /// 
 /// 라우팅 대상:
 /// - EnemyAnimator: 애니메이션 종료 추적 (Attack, Death)
-/// - EnemyAttacker: 공격 타격 처리 (OnAttackHit)
+/// - IEnemyAttacker: 공격 타격 처리 (OnAttackHit). 근접(EnemyAttacker)/원거리(EnemyRangedAttacker) 공통.
 /// 
-/// 향후 다른 Animation Event 도 같은 패턴으로 추가 가능.
+/// IEnemyAttacker 인터페이스 참조로 근접/원거리 구분 없이 PerformHit 라우팅.
 /// </summary>
 public class EnemyAnimationEventReceiver : MonoBehaviour
 {
     private EnemyAnimator _enemyAnimator;
-    private EnemyAttacker _enemyAttacker;
+    private IEnemyAttacker _attacker;
 
     private void Awake()
     {
         _enemyAnimator = GetComponentInParent<EnemyAnimator>();
-        _enemyAttacker = GetComponentInParent<EnemyAttacker>();
+        _attacker = GetComponentInParent<IEnemyAttacker>();
 
         if (_enemyAnimator == null)
         {
             Debug.LogError("[EnemyAnimationEventReceiver] EnemyAnimator not found in parent!");
         }
 
-        if (_enemyAttacker == null)
+        if (_attacker == null)
         {
-            Debug.LogError("[EnemyAnimationEventReceiver] EnemyAttacker not found in parent!");
+            Debug.LogError("[EnemyAnimationEventReceiver] IEnemyAttacker not found in parent!");
         }
     }
 
     // ========================================================================
     // === Animation Event Callbacks ===
-    // 각 메서드는 Mixamo 클립의 Animation Event 에서 호출된다.
     // ========================================================================
 
     /// <summary>
@@ -47,11 +46,12 @@ public class EnemyAnimationEventReceiver : MonoBehaviour
 
     /// <summary>
     /// 공격 타격 시점에 호출.
-    /// EnemyAttacker 가 OverlapSphere 로 한 프레임 검사하여 Target (Player) 감지 + 데미지 적용.
+    /// 근접: OverlapSphere 즉시 타격. 원거리: 발사체 생성.
+    /// IEnemyAttacker 구현체 (EnemyAttacker / EnemyRangedAttacker) 가 처리.
     /// </summary>
     public void OnAttackHit()
     {
-        _enemyAttacker?.PerformHit();
+        _attacker?.PerformHit();
     }
 
     /// <summary>
