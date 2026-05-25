@@ -75,6 +75,23 @@ public class EnemyAnimator : MonoBehaviour
     }
 
     /// <summary>
+    /// 대기(Idle) 자세로 전환. 공격 후 쿨다운 등 "멈춰서 대기" 상황에 사용.
+    /// 내부적으로 Locomotion 상태 전환 + MoveSpeed 0 (Idle 블렌드).
+    /// 
+    /// SetMoveSpeed 는 댐핑이 걸려 한 번 호출로 0 에 도달하지 않으므로,
+    /// 매 프레임 호출해야 한다 (대기 상태의 OnUpdate 에서).
+    /// "이동(Locomotion)" 이 아닌 "대기(Idle)" 라는 의도를 명확히 하는 메서드.
+    /// </summary>
+    public void PlayIdle()
+    {
+        if (_animator == null) return;
+        // Attack 등 다른 상태에서 Locomotion 으로 전환
+        _animator.SetTrigger(LocomotionTriggerHash);
+        // Idle 블렌드 (매 프레임 호출 시 댐핑으로 0 수렴)
+        _animator.SetFloat(MoveSpeedHash, 0f, _moveSpeedDampTime, Time.deltaTime);
+    }
+
+    /// <summary>
     /// 공격 애니메이션 발동. AttackState 의 OnEnter 에서 호출.
     /// 호출 시 _isAttackFinished 플래그 리셋.
     /// </summary>

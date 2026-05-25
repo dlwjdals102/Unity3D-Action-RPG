@@ -59,6 +59,9 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
     /// <summary>추격 포기 거리. ChaseState 가 활용.</summary>
     public float GiveUpRange => _config != null ? _config.GiveUpRange : 0f;
 
+    /// <summary>공격 후 대기 시간(초). 모든 적 공통. AttackState 들이 활용.</summary>
+    public float AttackCooldown => _config != null ? _config.AttackCooldown : 0f;
+
     // === Current State ===
     public EnemyStateBase CurrentState { get; private set; }
 

@@ -18,13 +18,11 @@ using UnityEngine;
 /// </summary>
 public class RangedAttackState : EnemyStateBase
 {
-    private readonly float _attackCooldown;
     private float _cooldownTimer;
 
-    public RangedAttackState(EnemyStateMachineBase stateMachine, float attackCooldown)
+    public RangedAttackState(EnemyStateMachineBase stateMachine)
         : base(stateMachine)
     {
-        _attackCooldown = attackCooldown;
     }
 
     public override void OnEnter()
@@ -65,6 +63,12 @@ public class RangedAttackState : EnemyStateBase
         {
             FireOnce();
         }
+        else
+        {
+            // 쿨다운 중: Idle 대기 (발사 애니메이션 마지막 프레임 고정 방지)
+            // 매 프레임 호출로 댐핑 수렴. LookAt 조준은 위에서 계속.
+            _stateMachine.Animator.PlayIdle();
+        }
 
         // 쿨다운 중이면 조준하며 대기 (위 LookAt 계속)
     }
@@ -85,6 +89,6 @@ public class RangedAttackState : EnemyStateBase
         _stateMachine.Animator.PlayAttack();
 
         // 쿨다운 시작
-        _cooldownTimer = _attackCooldown;
+        _cooldownTimer = _stateMachine.AttackCooldown;
     }
 }

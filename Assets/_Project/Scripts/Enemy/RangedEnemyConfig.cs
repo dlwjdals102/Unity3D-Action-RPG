@@ -20,11 +20,7 @@ public class RangedEnemyConfig : EnemyConfig
     [Tooltip("발사체 이동 속도 (m/s)")]
     [SerializeField] private float _projectileSpeed = 10f;
 
-    [Tooltip("발사 주기 (초). 한 발 발사 후 다음 발사까지 대기 시간")]
-    [SerializeField] private float _attackCooldown = 2f;
-
     // === Public Properties (읽기 전용) ===
     public GameObject ProjectilePrefab => _projectilePrefab;
     public float ProjectileSpeed => _projectileSpeed;
-    public float AttackCooldown => _attackCooldown;
 }

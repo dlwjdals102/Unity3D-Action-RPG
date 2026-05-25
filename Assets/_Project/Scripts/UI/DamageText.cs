@@ -20,6 +20,28 @@ public class DamageText : MonoBehaviour
     private float _elapsed;
     private Vector3 _startPosition;
     private Color _startColor;
+    private Color _baseColor;
+    private bool _baseColorCaptured;
+
+    private void Awake()
+    {
+        // 프리팹 원본 색을 최초 1회 저장 (페이드로 오염되기 전).
+        // 풀 재사용 시 이 원본으로 리셋 → 알파 0(투명) 잔재 방지.
+        CaptureBaseColor();
+    }
+
+    /// <summary>
+    /// 원본 색 캡처 (최초 1회). _text 참조가 있으면 그 색을, 알파는 1 로 보정.
+    /// </summary>
+    private void CaptureBaseColor()
+    {
+        if (_baseColorCaptured) return;
+        if (_text == null) return;
+
+        _baseColor = _text.color;
+        _baseColor.a = 1f;  // 알파는 항상 불투명에서 시작 (혹시 프리팹 알파가 1 아니어도 보정)
+        _baseColorCaptured = true;
+    }
 
     /// <summary>
     /// 데미지 텍스트 초기화. DamageTextManager 가 풀에서 가져온 후 호출.
@@ -30,8 +52,10 @@ public class DamageText : MonoBehaviour
         _startPosition = worldPosition;
 
         _text.text = damage.ToString();
-        _startColor = _text.color;
-        _text.color = _startColor;  // 알파 리셋
+        // 페이드로 오염될 수 있는 _text.color 대신 원본(_baseColor)에서 시작.
+        // (재사용 시 이전 사용의 알파 0 잔재 제거 → 투명 버그 방지)
+        _startColor = _baseColor;
+        _text.color = _baseColor;
 
         _elapsed = 0f;
 
@@ -65,7 +89,6 @@ public class DamageText : MonoBehaviour
 
     private void LateUpdate()
     {
-        // Billboard: 카메라 향해 회전 (텍스트가 항상 카메라 정면)
         if (Camera.main != null)
         {
             transform.rotation = Camera.main.transform.rotation;

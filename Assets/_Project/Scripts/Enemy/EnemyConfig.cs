@@ -36,6 +36,11 @@ public class EnemyConfig : ScriptableObject
     [Tooltip("추격 포기 거리")]
     [SerializeField] private float _giveUpRange = 15f;
 
+    [Header("Attack Cooldown")]
+    [Tooltip("공격 후 다음 공격까지 대기 시간(초). 모든 적 공통. " +
+             "0 = 쿨다운 없이 연속 공격. 근접 단타/원거리 발사/엘리트 콤보 모두 이 값을 사용")]
+    [SerializeField] private float _attackCooldown = 0f;
+
     // === Public Properties (읽기 전용) ===
     public int MaxHealth => _maxHealth;
     public float WalkSpeed => _walkSpeed;
@@ -45,4 +50,5 @@ public class EnemyConfig : ScriptableObject
     public float DetectionRange => _detectionRange;
     public float DetectionAngle => _detectionAngle;
     public float GiveUpRange => _giveUpRange;
+    public float AttackCooldown => _attackCooldown;
 }
