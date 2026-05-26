@@ -1,4 +1,5 @@
 using UnityEngine;
+using System;
 
 /// <summary>
 /// 플레이어의 체력 관리 + IDamageable 구현.
@@ -8,8 +9,9 @@ using UnityEngine;
 /// </summary>
 public class PlayerHealth : MonoBehaviour, IDamageable
 {
-    [Header("Health")]
-    [SerializeField] private int _maxHealth = 100;
+    [Header("Stats")]
+    [Tooltip("플레이어 정적 스탯 (최대 체력 등). PlayerStatsConfig 에셋 할당")]
+    [SerializeField] private PlayerStatsConfig _stats;
 
     [Header("Damage Text")]
     [Tooltip("데미지 텍스트가 표시될 머리 위 높이")]
@@ -18,15 +20,29 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     private int _currentHealth;
     private bool _isInvincible;
 
+    /// <summary>체력 변경 시 발행. (현재 체력, 최대 체력). HUD 등이 구독.</summary>
+    public event Action<int, int> OnHealthChanged;
+
     // === Public Properties ===
     public int CurrentHealth => _currentHealth;
-    public int MaxHealth => _maxHealth;
+    public int MaxHealth => _stats != null ? _stats.MaxHealth : 100;
     public bool IsDead => _currentHealth <= 0;
     public bool IsInvincible => _isInvincible;
 
     private void Awake()
     {
-        _currentHealth = _maxHealth;
+        if (_stats == null)
+        {
+            Debug.LogError($"[PlayerHealth] PlayerStatsConfig not assigned on {gameObject.name}!");
+        }
+
+        _currentHealth = MaxHealth;
+    }
+
+    private void Start()
+    {
+        // 초기 체력을 HUD 등에 알림 (구독자가 Awake 이후 등록될 수 있어 Start 에서 발행)
+        OnHealthChanged?.Invoke(_currentHealth, MaxHealth);
     }
 
     // ========================================================================
@@ -45,6 +61,9 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
         _currentHealth -= info.Amount;
         if (_currentHealth < 0) _currentHealth = 0;
+
+        // 체력 변경 알림 (HUD 갱신)
+        OnHealthChanged?.Invoke(_currentHealth, MaxHealth);
 
         // 머리 위에 데미지 텍스트 생성
         Vector3 textPosition = transform.position + Vector3.up * _damageTextHeight;
