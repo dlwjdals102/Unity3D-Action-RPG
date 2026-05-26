@@ -10,7 +10,7 @@ using UnityEngine;
 /// 
 /// 단일 책임: 공격 시 타격 감지 + 데미지 전달.
 /// </summary>
-public class EnemyAttacker : MonoBehaviour, IEnemyAttacker
+public class MeleeEnemyAttacker : MonoBehaviour, IEnemyAttacker
 {
     [Header("Config")]
     [Tooltip("적의 수치 데이터 (데미지 등)")]
@@ -30,12 +30,12 @@ public class EnemyAttacker : MonoBehaviour, IEnemyAttacker
     {
         if (_config == null)
         {
-            Debug.LogError($"[EnemyAttacker] EnemyConfig not assigned on {gameObject.name}!");
+            Debug.LogError($"[MeleeEnemyAttacker] EnemyConfig not assigned on {gameObject.name}!");
         }
 
         if (_hitOrigin == null)
         {
-            Debug.LogError($"[EnemyAttacker] HitOrigin not assigned on {gameObject.name}! Please assign in Inspector.");
+            Debug.LogError($"[MeleeEnemyAttacker] HitOrigin not assigned on {gameObject.name}! Please assign in Inspector.");
         }
     }
 

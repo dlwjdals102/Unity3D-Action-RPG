@@ -12,12 +12,12 @@ using UnityEngine;
 /// 
 /// (엘리트 EliteComboAttackState 의 쿨다운 처리와 거의 동일 - 미래 공통 추출 후보)
 /// </summary>
-public class EnemyAttackState : EnemyStateBase
+public class MeleeEnemyAttackState : EnemyStateBase
 {
     private bool _isCoolingDown;
     private float _cooldownTimer;
 
-    public EnemyAttackState(EnemyStateMachineBase stateMachine) : base(stateMachine) { }
+    public MeleeEnemyAttackState(EnemyStateMachineBase stateMachine) : base(stateMachine) { }
 
     public override void OnEnter()
     {

@@ -2,14 +2,14 @@ using UnityEngine;
 
 /// <summary>
 /// 원거리 적의 공격 처리. IEnemyAttacker 구현.
-/// 근접 EnemyAttacker (OverlapSphere 즉시 타격) 와 달리, FireOrigin 에서 발사체를 생성한다.
+/// 근접 MeleeEnemyAttacker (OverlapSphere 즉시 타격) 와 달리, FireOrigin 에서 발사체를 생성한다.
 /// 
 /// 발사체 시각/수치 (Prefab, 속도, 데미지) 는 RangedEnemyConfig 에서 읽는다.
 /// → 같은 코드 + 다른 Config = 궁수(화살) / 마법사(마법 구체).
 /// 
 /// PerformHit (Animation Event 호출) 시점에 Target 방향으로 발사체 1개 생성.
 /// </summary>
-public class EnemyRangedAttacker : MonoBehaviour, IEnemyAttacker
+public class RangedEnemyAttacker : MonoBehaviour, IEnemyAttacker
 {
     [Header("Config")]
     [Tooltip("원거리 적의 수치 데이터 (발사체 Prefab, 속도, 데미지 등)")]
@@ -30,17 +30,17 @@ public class EnemyRangedAttacker : MonoBehaviour, IEnemyAttacker
     {
         if (_config == null)
         {
-            Debug.LogError($"[EnemyRangedAttacker] RangedEnemyConfig not assigned on {gameObject.name}!");
+            Debug.LogError($"[RangedEnemyAttacker] RangedEnemyConfig not assigned on {gameObject.name}!");
         }
 
         if (_fireOrigin == null)
         {
-            Debug.LogError($"[EnemyRangedAttacker] FireOrigin not assigned on {gameObject.name}!");
+            Debug.LogError($"[RangedEnemyAttacker] FireOrigin not assigned on {gameObject.name}!");
         }
 
         if (_target == null)
         {
-            Debug.LogWarning($"[EnemyRangedAttacker] Target not assigned on {gameObject.name}!");
+            Debug.LogWarning($"[RangedEnemyAttacker] Target not assigned on {gameObject.name}!");
         }
     }
 
@@ -57,7 +57,7 @@ public class EnemyRangedAttacker : MonoBehaviour, IEnemyAttacker
         if (_config == null || _fireOrigin == null || _target == null) return;
         if (_config.ProjectilePrefab == null)
         {
-            Debug.LogError($"[EnemyRangedAttacker] ProjectilePrefab not set in Config on {gameObject.name}!");
+            Debug.LogError($"[RangedEnemyAttacker] ProjectilePrefab not set in Config on {gameObject.name}!");
             return;
         }
 
@@ -87,7 +87,7 @@ public class EnemyRangedAttacker : MonoBehaviour, IEnemyAttacker
         }
         else
         {
-            Debug.LogError($"[EnemyRangedAttacker] ProjectilePrefab has no Projectile component on {gameObject.name}!");
+            Debug.LogError($"[RangedEnemyAttacker] ProjectilePrefab has no Projectile component on {gameObject.name}!");
             Destroy(projObj);
         }
     }

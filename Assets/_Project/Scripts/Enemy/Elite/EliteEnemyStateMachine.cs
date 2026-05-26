@@ -12,7 +12,7 @@ using UnityEngine;
 /// 
 /// (Phase 2 에서 ChargeState 돌진 추가, Phase 3 에서 콤보/돌진 패턴 전환 예정)
 /// 
-/// 근접 EnemyStateMachine 과의 차이: AttackState 가 EliteComboAttackState.
+/// 근접 MeleeEnemyStateMachine 과의 차이: AttackState 가 EliteComboAttackState.
 /// EliteEnemyConfig 필수 (콤보 데미지/확률). EliteComboAttackState 에 Config 주입.
 /// </summary>
 public class EliteEnemyStateMachine : EnemyStateMachineBase

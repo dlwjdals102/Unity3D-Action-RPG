@@ -6,7 +6,7 @@ using UnityEngine;
 /// ChaseSpeed (Run 속도) + Animator MoveSpeed 는 실제 이동 속도 기반.
 /// 
 /// 상태 전환:
-/// - 공격 거리 도달 시 → EnemyAttackState
+/// - 공격 거리 도달 시 → MeleeEnemyAttackState
 /// - 추격 포기 거리 초과 시 → EnemyPatrolState (Target 이 멀어짐)
 /// </summary>
 public class EnemyChaseState : EnemyStateBase

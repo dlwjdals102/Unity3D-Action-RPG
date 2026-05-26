@@ -8,12 +8,12 @@ using UnityEngine;
 /// 공통 메커니즘 (ChangeState, CanSeeTarget, 컴포넌트/Config/이벤트 구독, Gizmos) 은 베이스 담당.
 /// 이 클래스는 "근접 적이 어떤 상태를 갖고, 전환 의도가 어떤 상태로 가는지" 만 정의.
 /// </summary>
-public class EnemyStateMachine : EnemyStateMachineBase
+public class MeleeEnemyStateMachine : EnemyStateMachineBase
 {
     // === State Instances (근접 전용) ===
     public EnemyPatrolState PatrolState { get; private set; }
     public EnemyChaseState ChaseState { get; private set; }
-    public EnemyAttackState AttackState { get; private set; }
+    public MeleeEnemyAttackState AttackState { get; private set; }
     public EnemyDeathState DeathState { get; private set; }
 
     // ========================================================================
@@ -27,7 +27,7 @@ public class EnemyStateMachine : EnemyStateMachineBase
     {
         PatrolState = new EnemyPatrolState(this);
         ChaseState = new EnemyChaseState(this);
-        AttackState = new EnemyAttackState(this);
+        AttackState = new MeleeEnemyAttackState(this);
         DeathState = new EnemyDeathState(this);
     }
 

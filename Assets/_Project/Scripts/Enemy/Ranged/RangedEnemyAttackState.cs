@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 원거리 적의 공격 상태 (발사).
-/// 근접 EnemyAttackState 와 다름:
+/// 근접 MeleeEnemyAttackState 와 다름:
 /// - 즉시 회전(다크소울) 대신 LookAt 조준 (멀리서 천천히 조준 → 회피 여지).
 /// - 연속 공격 대신 발사 쿨다운 (Config.AttackCooldown).
 /// 
@@ -16,11 +16,11 @@ using UnityEngine;
 /// 
 /// _stateMachine 은 베이스 타입. 전환은 ToChase 의도 (원거리 파생이 EnemyChaseState 로).
 /// </summary>
-public class RangedAttackState : EnemyStateBase
+public class RangedEnemyAttackState : EnemyStateBase
 {
     private float _cooldownTimer;
 
-    public RangedAttackState(EnemyStateMachineBase stateMachine)
+    public RangedEnemyAttackState(EnemyStateMachineBase stateMachine)
         : base(stateMachine)
     {
     }

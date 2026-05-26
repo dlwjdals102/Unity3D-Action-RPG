@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 적의 사망 상태.
-/// EnemyHealth.OnDeath 이벤트 발행 시 EnemyStateMachine.HandleDeath 가 강제 전환.
+/// EnemyHealth.OnDeath 이벤트 발행 시 MeleeEnemyStateMachine.HandleDeath 가 강제 전환.
 /// 
 /// 동작:
 /// - OnEnter: 이동 정지 + 콜라이더 비활성 (추가 데미지 차단) + Death 애니메이션 재생

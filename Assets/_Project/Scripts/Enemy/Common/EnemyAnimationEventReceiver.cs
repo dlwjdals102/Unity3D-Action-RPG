@@ -7,7 +7,7 @@ using UnityEngine;
 /// 
 /// 라우팅 대상:
 /// - EnemyAnimator: 애니메이션 종료 추적 (Attack, Death)
-/// - IEnemyAttacker: 공격 타격 처리 (OnAttackHit). 근접(EnemyAttacker)/원거리(EnemyRangedAttacker) 공통.
+/// - IEnemyAttacker: 공격 타격 처리 (OnAttackHit). 근접(EnemyAttacker)/원거리(RangedEnemyAttacker) 공통.
 /// 
 /// IEnemyAttacker 인터페이스 참조로 근접/원거리 구분 없이 PerformHit 라우팅.
 /// </summary>
@@ -47,7 +47,7 @@ public class EnemyAnimationEventReceiver : MonoBehaviour
     /// <summary>
     /// 공격 타격 시점에 호출.
     /// 근접: OverlapSphere 즉시 타격. 원거리: 발사체 생성.
-    /// IEnemyAttacker 구현체 (EnemyAttacker / EnemyRangedAttacker) 가 처리.
+    /// IEnemyAttacker 구현체 (EnemyAttacker / RangedEnemyAttacker) 가 처리.
     /// </summary>
     public void OnAttackHit()
     {

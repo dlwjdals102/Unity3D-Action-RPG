@@ -3,8 +3,8 @@
 /// Animation Event 시점에 PerformHit 이 호출되어 공격을 실행한다.
 /// 
 /// 구현이 다른 공격 방식을 공통 처리하기 위한 인터페이스:
-/// - EnemyAttacker (근접): OverlapSphere 즉시 타격
-/// - EnemyRangedAttacker (원거리): 발사체 생성
+/// - MeleeEnemyAttacker (근접): OverlapSphere 즉시 타격
+/// - RangedEnemyAttacker (원거리): 발사체 생성
 /// - 미래: 소환, 범위 공격 등
 /// 
 /// EnemyAnimationEventReceiver 가 IEnemyAttacker 로 참조하여

@@ -9,7 +9,7 @@ using UnityEngine;
 /// 시각 보정값 (_damageTextHeight) 은 메시 별 미세 조정이라 컴포넌트가 보유.
 /// 
 /// 사망/피격 처리는 이벤트로 외부에 알리고, 실제 처리 (Death 애니메이션, 추격 전환 등) 는
-/// 구독자 (EnemyStateMachine) 가 담당. 느슨한 결합 패턴.
+/// 구독자 (MeleeEnemyStateMachine) 가 담당. 느슨한 결합 패턴.
 /// </summary>
 public class EnemyHealth : MonoBehaviour, IDamageable
 {

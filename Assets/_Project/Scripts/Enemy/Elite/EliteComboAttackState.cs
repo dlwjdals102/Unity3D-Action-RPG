@@ -15,7 +15,7 @@ using UnityEngine;
 /// 실제 타격(PerformHit)은 Animation Event 가 담당.
 /// 애니메이션은 Phase 1 에선 3타 같은 클립 (ComboIndex 없음, 시각 폴리싱은 나중).
 /// 
-/// Config 는 생성자 주입 (베이스 _config 는 EnemyConfig 라 콤보 메서드 접근 불가, RangedAttackState 패턴).
+/// Config 는 생성자 주입 (베이스 _config 는 EnemyConfig 라 콤보 메서드 접근 불가, RangedEnemyAttackState 패턴).
 /// </summary>
 public class EliteComboAttackState : EnemyStateBase
 {

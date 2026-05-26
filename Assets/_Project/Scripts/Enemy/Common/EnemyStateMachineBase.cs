@@ -16,7 +16,7 @@ using UnityEngine;
 /// - 초기 상태 진입 - GetInitialState
 /// - 사망/피격 시 전환 대상 (ChaseState 가 근접/원거리 다름) - HandleDeath/HandleDamaged
 /// 
-/// 미래 파생 예시: EnemyStateMachine (근접), RangedEnemyStateMachine (원거리),
+/// 미래 파생 예시: MeleeEnemyStateMachine (근접), RangedEnemyStateMachine (원거리),
 ///   SummonerStateMachine (소환), FlyingEnemyStateMachine (비행).
 /// </summary>
 [RequireComponent(typeof(EnemyMovement))]

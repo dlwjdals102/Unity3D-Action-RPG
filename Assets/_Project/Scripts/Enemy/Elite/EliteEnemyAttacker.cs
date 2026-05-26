@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 엘리트 적의 근접 콤보 공격 처리. IEnemyAttacker 구현.
-/// 근접 EnemyAttacker (단일 데미지) 와 달리 콤보 인덱스별 데미지를 적용한다.
+/// 근접 MeleeEnemyAttacker (단일 데미지) 와 달리 콤보 인덱스별 데미지를 적용한다.
 /// 
 /// IEnemyAttacker.PerformHit() 은 매개변수가 없으므로 (Animation Event 가 호출),
 /// State 가 각 타 시작 시 SetCurrentCombo(index) 로 현재 데미지를 미리 설정한다.

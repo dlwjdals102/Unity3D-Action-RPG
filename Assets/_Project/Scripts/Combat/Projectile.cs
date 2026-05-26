@@ -5,7 +5,7 @@ using UnityEngine;
 /// 시각 (화살/마법 구체) 은 Prefab 으로, 수치 (속도/데미지) 는 Initialize 로 주입.
 /// → 같은 코드 + 다른 Prefab/데이터 = 궁수의 화살 / 마법사의 구체.
 /// 
-/// 충돌 감지: 본인 공격 시스템 (PlayerAttacker/EnemyAttacker) 의 OverlapSphere 패턴 일관.
+/// 충돌 감지: 본인 공격 시스템 (PlayerAttacker/MeleeEnemyAttacker) 의 OverlapSphere 패턴 일관.
 /// - targetLayer (Player) 충돌: 데미지 적용 + 소멸
 /// - obstacleLayer (벽) 충돌: 데미지 없이 소멸
 /// 
@@ -33,7 +33,7 @@ public class Projectile : MonoBehaviour
     private bool _initialized;
 
     /// <summary>
-    /// 발사체 데이터 주입. EnemyRangedAttacker 가 생성 직후 호출.
+    /// 발사체 데이터 주입. RangedEnemyAttacker 가 생성 직후 호출.
     /// </summary>
     public void Initialize(float speed, int damage, LayerMask targetLayer, GameObject owner)
     {
