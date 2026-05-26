@@ -21,6 +21,7 @@ public class EliteEnemyStateMachine : EnemyStateMachineBase
     public EnemyPatrolState PatrolState { get; private set; }
     public EnemyChaseState ChaseState { get; private set; }
     public EliteComboAttackState AttackState { get; private set; }
+    public EliteChargeState ChargeState { get; private set; }
     public EnemyDeathState DeathState { get; private set; }
 
     // ========================================================================
@@ -33,23 +34,21 @@ public class EliteEnemyStateMachine : EnemyStateMachineBase
     /// </summary>
     protected override void CreateStates()
     {
-        PatrolState = new EnemyPatrolState(this);
-        ChaseState = new EnemyChaseState(this);
-        DeathState = new EnemyDeathState(this);
-
-        // EliteComboAttackState 는 EliteEnemyConfig 의 콤보 데미지/확률 필요.
-        // 베이스 _config 는 EnemyConfig 타입이라 안전 캐스팅.
+        // EliteEnemyConfig 안전 캐스팅 (콤보/돌진/추격 상태가 모두 필요).
+        // 베이스 _config 는 EnemyConfig 타입이라 캐스팅. null 이면 각 State 의
+        // null 가드가 안전 처리 (EliteChaseState→일반 추격, Combo/Charge→ToChase).
         var eliteConfig = _config as EliteEnemyConfig;
         if (eliteConfig == null)
         {
             Debug.LogError($"[EliteEnemyStateMachine] requires EliteEnemyConfig on {gameObject.name}! " +
                            $"Assign an EliteEnemyConfig asset, not a plain EnemyConfig.");
-            // null 로 폴백 (State 내부에서 _eliteConfig null 가드 필요 - 검증 단계에서 확인)
-            AttackState = new EliteComboAttackState(this, null);
-            return;
         }
 
+        PatrolState = new EnemyPatrolState(this);
+        ChaseState = new EliteChaseState(this, eliteConfig);  // 돌진 발동 판단
+        DeathState = new EnemyDeathState(this);
         AttackState = new EliteComboAttackState(this, eliteConfig);
+        ChargeState = new EliteChargeState(this, eliteConfig);
     }
 
     /// <summary>초기 진입 상태: 순찰.</summary>
@@ -83,4 +82,10 @@ public class EliteEnemyStateMachine : EnemyStateMachineBase
     public override void ToPatrol() => ChangeState(PatrolState);
     public override void ToChase() => ChangeState(ChaseState);
     public override void ToAttack() => ChangeState(AttackState);
+
+    /// <summary>
+    /// 돌진 상태로 전환. 엘리트 전용 (베이스 추상 아님 - 좀비/궁수는 돌진 없음).
+    /// EliteChaseState 가 중거리 + 쿨다운 OK 일 때 호출.
+    /// </summary>
+    public void ToCharge() => ChangeState(ChargeState);
 }

@@ -82,6 +82,48 @@ public class EnemyMovement : MonoBehaviour
         _agent.ResetPath();
     }
 
+    // ========================================================================
+    // === Charge (돌진) - transform 직접 이동 ===
+    // NavMeshAgent 의 경로 이동이 아닌 직선 돌진. 돌진 중 NavMeshAgent 는
+    // 자동 이동을 멈추되(updatePosition off), 위치는 transform 과 동기화한다.
+    // ========================================================================
+
+    /// <summary>
+    /// 돌진 시작. NavMeshAgent 의 자동 위치 갱신을 끄고 직접 이동 모드로 전환.
+    /// </summary>
+    public void BeginCharge()
+    {
+        _agent.isStopped = true;
+        _agent.ResetPath();
+        // NavMeshAgent 가 transform 을 덮어쓰지 않도록 (직접 이동 위해)
+        _agent.updatePosition = false;
+        _agent.updateRotation = false;
+    }
+
+    /// <summary>
+    /// 돌진 이동 (매 프레임). 지정 방향으로 직선 이동.
+    /// NavMesh 위에 위치를 유지하기 위해 NavMeshAgent.nextPosition 도 동기화.
+    /// </summary>
+    public void ChargeMove(Vector3 direction, float speed)
+    {
+        Vector3 delta = direction * speed * Time.deltaTime;
+        transform.position += delta;
+        // NavMeshAgent 내부 위치도 따라오게 (종료 후 경로 계산 정상화)
+        _agent.nextPosition = transform.position;
+    }
+
+    /// <summary>
+    /// 돌진 종료. NavMeshAgent 자동 갱신 복원 + 현재 위치를 NavMesh 에 맞춤.
+    /// </summary>
+    public void EndCharge()
+    {
+        // 현재 transform 위치를 NavMesh 상으로 워프 (어긋남 보정)
+        _agent.Warp(transform.position);
+        _agent.updatePosition = true;
+        _agent.updateRotation = true;
+        _agent.isStopped = true;  // 경직 동안 정지 (ChargeState 가 이후 제어)
+    }
+
     /// <summary>
     /// NavMeshAgent 의 정지 거리를 설정한다.
     /// 상태별로 다른 의미:

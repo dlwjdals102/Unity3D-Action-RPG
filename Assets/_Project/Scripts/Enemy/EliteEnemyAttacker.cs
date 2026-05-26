@@ -26,6 +26,16 @@ public class EliteEnemyAttacker : MonoBehaviour, IEnemyAttacker
     [Tooltip("공격 대상 Layer (보통 Player)")]
     [SerializeField] private LayerMask _targetLayer;
 
+    [Header("Charge Hit (돌진 충돌)")]
+    [Tooltip("돌진 충돌 판정의 정면 오프셋 (적 중심에서 진행 방향으로). 몸 충돌이라 HitOrigin 보다 가까움")]
+    [SerializeField] private float _chargeHitForwardOffset = 0.5f;
+
+    [Tooltip("돌진 충돌 판정의 높이 오프셋 (적 발 기준). Base Offset 고려해 가슴 높이로")]
+    [SerializeField] private float _chargeHitHeightOffset = 1f;
+
+    [Tooltip("돌진 충돌 판정 반경 (m). 몸 충돌이라 콤보보다 넓을 수 있음")]
+    [SerializeField] private float _chargeHitRadius = 1f;
+
     // 현재 타의 데미지 (SetCurrentCombo 로 설정)
     private int _currentDamage;
 
@@ -86,15 +96,67 @@ public class EliteEnemyAttacker : MonoBehaviour, IEnemyAttacker
         }
     }
 
+    /// <summary>
+    /// 돌진 충돌 타격. HitOrigin 영역에 대상이 있으면 지정 데미지를 적용한다.
+    /// 콤보(PerformHit)와 달리 데미지를 매개변수로 받고(돌진 데미지),
+    /// 대상을 맞췄는지 여부를 반환한다 (ChargeState 가 충돌 종료 판단에 사용).
+    /// </summary>
+    /// <returns>대상(Player)을 맞췄으면 true</returns>
+    public bool PerformChargeHit(int damage)
+    {
+        // 돌진은 "몸으로 부딪히는" 공격이라 콤보용 HitOrigin(앞쪽 리치)이 아닌
+        // 적 중심 기준으로 판정한다 (오프셋/반경은 Inspector 조정 가능).
+        Vector3 chargeHitPoint = GetChargeHitPoint();
+
+        Collider[] hits = Physics.OverlapSphere(chargeHitPoint, _chargeHitRadius, _targetLayer);
+
+        bool hitTarget = false;
+
+        foreach (var hit in hits)
+        {
+            if (hit.TryGetComponent<IDamageable>(out var target))
+            {
+                var info = new DamageInfo
+                {
+                    Amount = damage,
+                    Source = gameObject,
+                    HitPoint = hit.ClosestPoint(chargeHitPoint)
+                };
+
+                target.TakeDamage(info);
+                hitTarget = true;
+            }
+        }
+
+        return hitTarget;
+    }
+
     // ========================================================================
     // === Editor Visualization ===
     // ========================================================================
 
+    /// <summary>
+    /// 돌진 충돌 판정 중심점. 적 중심 + 정면 오프셋 + 높이 오프셋.
+    /// PerformChargeHit 과 Gizmo 가 공유 (단일 출처).
+    /// </summary>
+    private Vector3 GetChargeHitPoint()
+    {
+        return transform.position
+             + transform.forward * _chargeHitForwardOffset
+             + Vector3.up * _chargeHitHeightOffset;
+    }
+
     private void OnDrawGizmosSelected()
     {
-        if (_hitOrigin == null) return;
+        // 콤보 타격 범위 (빨강) - HitOrigin 앞쪽 리치
+        if (_hitOrigin != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(_hitOrigin.position, _hitRadius);
+        }
 
-        Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(_hitOrigin.position, _hitRadius);
+        // 돌진 충돌 범위 (주황) - 적 중심 + 오프셋
+        Gizmos.color = new Color(1f, 0.5f, 0f);
+        Gizmos.DrawWireSphere(GetChargeHitPoint(), _chargeHitRadius);
     }
 }
