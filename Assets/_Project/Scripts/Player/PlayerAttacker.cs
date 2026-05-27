@@ -72,6 +72,8 @@ public class PlayerAttacker : MonoBehaviour
 
         Collider[] hits = Physics.OverlapSphere(_hitOrigin.position, _hitRadius, _enemyLayer);
 
+        bool hitAny = false;
+
         foreach (var hit in hits)
         {
             if (hit.TryGetComponent<IDamageable>(out var target))
@@ -84,7 +86,15 @@ public class PlayerAttacker : MonoBehaviour
                 };
 
                 target.TakeDamage(info);
+                hitAny = true;
             }
+        }
+
+        // 적을 1마리 이상 맞췄을 때만 히트스톱 (헛스윙엔 없음)
+        if (hitAny)
+        {
+            HitStopManager.Instance?.Trigger();
+            CameraShakeManager.Instance?.Shake();
         }
     }
 
