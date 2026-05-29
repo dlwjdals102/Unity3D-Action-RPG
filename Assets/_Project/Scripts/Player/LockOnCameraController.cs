@@ -1,0 +1,101 @@
+using UnityEngine;
+using Unity.Cinemachine;
+
+/// <summary>
+/// 락온 카메라 제어. LockOnSystem 의 현재 타겟 상태를 보고 락온 전용 카메라를 켜고 끈다.
+/// (LockOnSystem 은 "누구를 락온" 만 담당, 이 컨트롤러가 "그걸 카메라로" 담당 - 책임 분리)
+/// 
+/// 락온 중: 락온 카메라의 LookAt = 타겟, Priority 를 활성값으로 올림 → Cinemachine 자동 전환.
+/// 해제 중: Priority 를 0 으로, LookAt 해제 → 일반 카메라로 복귀.
+/// </summary>
+public class LockOnCameraController : MonoBehaviour
+{
+    [Header("References")]
+    [Tooltip("락온 타겟을 관리하는 LockOnSystem")]
+    [SerializeField] private LockOnSystem _lockOnSystem;
+
+    [Tooltip("락온 전용 Cinemachine 카메라 (CM_LockOnCamera)")]
+    [SerializeField] private CinemachineCamera _lockOnCamera;
+
+    [Tooltip("평소 일반 Cinemachine 카메라 (CM_PlayerCamera)")]
+    [SerializeField] private CinemachineCamera _normalCamera;
+
+    [Header("Priority")]
+    [Tooltip("락온 중 락온 카메라 우선순위 (일반 카메라보다 높게)")]
+    [SerializeField] private int _activePriority = 20;
+
+    [Tooltip("락온 해제 시 우선순위 (일반 카메라보다 낮게)")]
+    [SerializeField] private int _inactivePriority = -10;
+
+    private Transform _lastTarget;
+    private CinemachineOrbitalFollow _normalOrbital;
+    private CinemachineInputAxisController _normalInputController;
+
+    private void Awake()
+    {
+        // 시작 시 락온 카메라 비활성 상태로
+        if (_lockOnCamera != null)
+        {
+            _lockOnCamera.Priority = _inactivePriority;
+            _lockOnCamera.LookAt = null;
+        }
+
+        // 일반 카메라의 Orbital Follow + Input Axis Controller 캐싱
+        if (_normalCamera != null)
+        {
+            _normalOrbital = _normalCamera.GetComponent<CinemachineOrbitalFollow>();
+            _normalInputController = _normalCamera.GetComponent<CinemachineInputAxisController>();
+        }
+    }
+
+    private void Update()
+    {
+        if (_lockOnSystem == null || _lockOnCamera == null) return;
+
+        Transform target = _lockOnSystem.CurrentTarget;
+
+        // 타겟 상태가 바뀐 경우에만 갱신 (매 프레임 불필요한 설정 방지)
+        if (target == _lastTarget) return;
+        _lastTarget = target;
+
+        if (target != null)
+        {
+            // 락온 시작/타겟 변경: LookAt 설정 + 우선순위 올려 전환
+            _lockOnCamera.LookAt = target;
+            _lockOnCamera.Priority = _activePriority;
+
+            // 락온 중 일반 카메라가 백그라운드에서 마우스 입력을 누적하지 않게 차단
+            // (안 끄면 락온 중 마우스 상하 이동이 해제 시 반영되어 시점이 튄다)
+            if (_normalInputController != null) _normalInputController.enabled = false;
+        }
+        else
+        {
+            // 락온 해제: 일반 카메라를 "락온 중 보던 방향"으로 맞춰 시점이 끊기지 않게 한 뒤
+            // (Orbital 은 락온 동안 옛 각도를 기억하므로, 현재 카메라 yaw 로 덮어씀)
+            // 우선순위를 내려 일반 카메라로 복귀.
+            SyncNormalCameraYaw();
+
+            _lockOnCamera.Priority = _inactivePriority;
+            _lockOnCamera.LookAt = null;
+
+            // 일반 카메라 입력 재개
+            if (_normalInputController != null) _normalInputController.enabled = true;
+        }
+    }
+
+    /// <summary>
+    /// 일반 카메라의 Orbital 수평 각도를 현재 메인 카메라가 보는 yaw 로 맞춘다.
+    /// 락온 해제 시 호출 → 락온 카메라가 보던 방향에서 끊김 없이 이어짐.
+    /// </summary>
+    private void SyncNormalCameraYaw()
+    {
+        if (_normalOrbital == null) return;
+
+        // 현재 활성(락온) 카메라가 보고 있는 월드 yaw
+        if (Camera.main != null)
+        {
+            float currentYaw = Camera.main.transform.eulerAngles.y;
+            _normalOrbital.HorizontalAxis.Value = currentYaw;
+        }
+    }
+}

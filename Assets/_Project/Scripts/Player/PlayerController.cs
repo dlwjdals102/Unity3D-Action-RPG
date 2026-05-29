@@ -23,6 +23,7 @@ public class PlayerController : MonoBehaviour
     private bool _jumpRequested;
     private bool _dodgeRequested;
     private bool _attackRequested;
+    private bool _lockOnRequested;
 
     // === Public Read-Only Access ===
     public Vector2 MoveInput => _moveInput;
@@ -31,6 +32,7 @@ public class PlayerController : MonoBehaviour
     public bool JumpRequested => _jumpRequested;
     public bool DodgeRequested => _dodgeRequested;
     public bool AttackRequested => _attackRequested;
+    public bool LockOnRequested => _lockOnRequested;
 
     private void Awake()
     {
@@ -55,6 +57,7 @@ public class PlayerController : MonoBehaviour
         _inputActions.Player.Dodge.performed += ctx => OnDodgePressed();
         _inputActions.Player.Jump.performed += ctx => OnJumpPressed();
         _inputActions.Player.Attack.performed += ctx => OnAttackPressed();
+        _inputActions.Player.LockOn.performed += ctx => OnLockOnPressed();
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
@@ -77,6 +80,7 @@ public class PlayerController : MonoBehaviour
         _jumpRequested = false;
         _dodgeRequested = false;
         _attackRequested = false;
+        _lockOnRequested = false;
     }
 
     private void OnDodgePressed()
@@ -95,5 +99,11 @@ public class PlayerController : MonoBehaviour
     {
         // 공격 요청 플래그 설정. 상태머신(IdleState/MoveState/LandState/AttackState)이 OnUpdate 에서 감지하여 처리.
         _attackRequested = true;
+    }
+
+    private void OnLockOnPressed()
+    {
+        // 락온 토글 요청. LockOnSystem 이 OnUpdate 에서 감지해 켜기/끄기 판단.
+        _lockOnRequested = true;
     }
 }
