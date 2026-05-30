@@ -18,6 +18,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerAnimator Animator { get; private set; }
     public PlayerAttacker Attacker { get; private set; }
     public PlayerStamina Stamina { get; private set; }
+    public LockOnSystem LockOn { get; private set; }
 
     // === State Instances (1번만 생성, 재사용) ===
     public IdleState IdleState { get; private set; }
@@ -39,6 +40,7 @@ public class PlayerStateMachine : MonoBehaviour
         Animator = GetComponent<PlayerAnimator>();
         Attacker = GetComponent<PlayerAttacker>();
         Stamina = GetComponent<PlayerStamina>();
+        LockOn = GetComponent<LockOnSystem>();
 
         // 상태 인스턴스 생성
         IdleState = new IdleState(this);

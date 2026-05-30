@@ -94,10 +94,33 @@ public class MoveState : PlayerStateBase
             : _stateMachine.Movement.WalkSpeed;
 
         _stateMachine.Movement.RequestMovement(moveDirection * speed);
-        _stateMachine.Movement.ApplyRotation(moveDirection);
+
+        // 락온 중이면 적을 바라보며 이동(스트레이프), 아니면 이동 방향으로 회전
+        Vector3 lookDirection = GetLookDirection(moveDirection);
+        _stateMachine.Movement.ApplyRotation(lookDirection);
 
         float normalizedSpeed = isSprinting ? 1f : 0.5f;
         _stateMachine.Animator.SetMoveSpeed(normalizedSpeed);
+    }
+
+    /// <summary>
+    /// 회전이 바라볼 방향을 결정한다.
+    /// 락온 중: 타겟(적) 방향 → 적을 바라본 채 이동(스트레이프).
+    /// 평소: 이동 방향 → 가는 쪽으로 몸을 돌림.
+    /// </summary>
+    private Vector3 GetLookDirection(Vector3 moveDirection)
+    {
+        LockOnSystem lockOn = _stateMachine.LockOn;
+        if (lockOn != null && lockOn.IsLockedOn)
+        {
+            Vector3 toTarget = lockOn.CurrentTarget.position - _stateMachine.transform.position;
+            toTarget.y = 0f;  // 수평 방향만 (위아래 기울임 방지)
+            if (toTarget.sqrMagnitude > 0.0001f)
+            {
+                return toTarget;
+            }
+        }
+        return moveDirection;  // 락온 아님 또는 타겟과 겹침 → 이동 방향
     }
 
     /// <summary>

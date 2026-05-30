@@ -17,6 +17,9 @@ public class LockOnCameraController : MonoBehaviour
     [Tooltip("락온 전용 Cinemachine 카메라 (CM_LockOnCamera)")]
     [SerializeField] private CinemachineCamera _lockOnCamera;
 
+    [Tooltip("플레이어+적을 함께 담는 Target Group (LockOnTargetGroup)")]
+    [SerializeField] private CinemachineTargetGroup _targetGroup;
+
     [Tooltip("평소 일반 Cinemachine 카메라 (CM_PlayerCamera)")]
     [SerializeField] private CinemachineCamera _normalCamera;
 
@@ -37,7 +40,6 @@ public class LockOnCameraController : MonoBehaviour
         if (_lockOnCamera != null)
         {
             _lockOnCamera.Priority = _inactivePriority;
-            _lockOnCamera.LookAt = null;
         }
 
         // 일반 카메라의 Orbital Follow + Input Axis Controller 캐싱
@@ -56,12 +58,15 @@ public class LockOnCameraController : MonoBehaviour
 
         // 타겟 상태가 바뀐 경우에만 갱신 (매 프레임 불필요한 설정 방지)
         if (target == _lastTarget) return;
+        Transform previousTarget = _lastTarget;  // 그룹에서 제거할 이전 적
         _lastTarget = target;
 
         if (target != null)
         {
-            // 락온 시작/타겟 변경: LookAt 설정 + 우선순위 올려 전환
-            _lockOnCamera.LookAt = target;
+            // 락온 시작/타겟 변경: 이전 적이 그룹에 있으면 제거 후 새 적 추가
+            RemoveTargetFromGroup(previousTarget);
+            AddTargetToGroup(target);
+
             _lockOnCamera.Priority = _activePriority;
 
             // 락온 중 일반 카메라가 백그라운드에서 마우스 입력을 누적하지 않게 차단
@@ -71,12 +76,12 @@ public class LockOnCameraController : MonoBehaviour
         else
         {
             // 락온 해제: 일반 카메라를 "락온 중 보던 방향"으로 맞춰 시점이 끊기지 않게 한 뒤
-            // (Orbital 은 락온 동안 옛 각도를 기억하므로, 현재 카메라 yaw 로 덮어씀)
             // 우선순위를 내려 일반 카메라로 복귀.
+            // (적은 그룹에서 빼지 않는다 - 빼면 락온 카메라가 플레이어 중앙으로 틀어지며
+            //  그 움직임이 블렌드에 섞여 어색하다. 이전 적 정리는 다음 락온 시작 시 수행.)
             SyncNormalCameraYaw();
 
             _lockOnCamera.Priority = _inactivePriority;
-            _lockOnCamera.LookAt = null;
 
             // 일반 카메라 입력 재개
             if (_normalInputController != null) _normalInputController.enabled = true;
@@ -97,5 +102,25 @@ public class LockOnCameraController : MonoBehaviour
             float currentYaw = Camera.main.transform.eulerAngles.y;
             _normalOrbital.HorizontalAxis.Value = currentYaw;
         }
+    }
+
+    /// <summary>
+    /// 적을 Target Group 에 추가 (이미 있으면 무시). 카메라가 플레이어와 함께 담는다.
+    /// </summary>
+    private void AddTargetToGroup(Transform target)
+    {
+        if (_targetGroup == null || target == null) return;
+        if (_targetGroup.FindMember(target) >= 0) return;  // 이미 멤버면 skip
+        _targetGroup.AddMember(target, 1f, 1f);  // weight 1, radius 1
+    }
+
+    /// <summary>
+    /// 적을 Target Group 에서 제거 (없으면 무시).
+    /// </summary>
+    private void RemoveTargetFromGroup(Transform target)
+    {
+        if (_targetGroup == null || target == null) return;
+        if (_targetGroup.FindMember(target) < 0) return;  // 멤버 아니면 skip
+        _targetGroup.RemoveMember(target);
     }
 }
