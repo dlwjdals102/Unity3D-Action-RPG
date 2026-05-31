@@ -24,6 +24,8 @@ public class PlayerController : MonoBehaviour
     private bool _dodgeRequested;
     private bool _attackRequested;
     private bool _lockOnRequested;
+    private bool _switchTargetLeftRequested;
+    private bool _switchTargetRightRequested;
 
     // === Public Read-Only Access ===
     public Vector2 MoveInput => _moveInput;
@@ -33,6 +35,8 @@ public class PlayerController : MonoBehaviour
     public bool DodgeRequested => _dodgeRequested;
     public bool AttackRequested => _attackRequested;
     public bool LockOnRequested => _lockOnRequested;
+    public bool SwitchTargetLeftRequested => _switchTargetLeftRequested;
+    public bool SwitchTargetRightRequested => _switchTargetRightRequested;
 
     private void Awake()
     {
@@ -58,6 +62,8 @@ public class PlayerController : MonoBehaviour
         _inputActions.Player.Jump.performed += ctx => OnJumpPressed();
         _inputActions.Player.Attack.performed += ctx => OnAttackPressed();
         _inputActions.Player.LockOn.performed += ctx => OnLockOnPressed();
+        _inputActions.Player.SwitchTargetLeft.performed += ctx => OnSwitchTargetLeftPressed();
+        _inputActions.Player.SwitchTargetRight.performed += ctx => OnSwitchTargetRightPressed();
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
@@ -81,6 +87,8 @@ public class PlayerController : MonoBehaviour
         _dodgeRequested = false;
         _attackRequested = false;
         _lockOnRequested = false;
+        _switchTargetLeftRequested = false;
+        _switchTargetRightRequested = false;
     }
 
     private void OnDodgePressed()
@@ -105,5 +113,17 @@ public class PlayerController : MonoBehaviour
     {
         // 락온 토글 요청. LockOnSystem 이 OnUpdate 에서 감지해 켜기/끄기 판단.
         _lockOnRequested = true;
+    }
+
+    private void OnSwitchTargetLeftPressed()
+    {
+        // 왼쪽 적으로 타겟 전환 요청. LockOnSystem 이 처리.
+        _switchTargetLeftRequested = true;
+    }
+
+    private void OnSwitchTargetRightPressed()
+    {
+        // 오른쪽 적으로 타겟 전환 요청. LockOnSystem 이 처리.
+        _switchTargetRightRequested = true;
     }
 }

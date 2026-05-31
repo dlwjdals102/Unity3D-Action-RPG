@@ -41,15 +41,27 @@ public class LockOnSystem : MonoBehaviour
 
     private void Update()
     {
+        if (_controller == null) return;
+
         // Tab 토글 요청 처리
-        if (_controller != null && _controller.LockOnRequested)
+        if (_controller.LockOnRequested)
         {
             Toggle();
         }
 
-        // 락온 중이면 유효성 검사 (죽음/거리)
+        // 락온 중일 때만 타겟 전환 + 유효성 검사
         if (IsLockedOn)
         {
+            // 좌/우 타겟 전환 (Q/E)
+            if (_controller.SwitchTargetLeftRequested)
+            {
+                SwitchTarget(toLeft: true);
+            }
+            else if (_controller.SwitchTargetRightRequested)
+            {
+                SwitchTarget(toLeft: false);
+            }
+
             ValidateCurrentTarget();
         }
     }
@@ -107,6 +119,55 @@ public class LockOnSystem : MonoBehaviour
         }
 
         return best;
+    }
+
+    /// <summary>
+    /// 현재 타겟 기준, 화면상 왼쪽(toLeft=true) 또는 오른쪽의 다음 적으로 전환한다.
+    /// 후보가 없으면 현재 타겟 유지.
+    /// (FindBestTarget 과 같은 "화면 안 후보 수집" 을 쓰되, 선택 기준이 좌/우 방향)
+    /// </summary>
+    private void SwitchTarget(bool toLeft)
+    {
+        if (_camera == null || _currentTarget == null) return;
+
+        // 현재 타겟의 화면 X 좌표
+        Vector3 currentVp = _camera.WorldToViewportPoint(_currentTarget.position);
+        float currentX = currentVp.x;
+
+        Collider[] candidates = Physics.OverlapSphere(transform.position, _lockOnRange, _enemyLayer);
+
+        Transform best = null;
+        float bestXDist = float.MaxValue;
+
+        foreach (var col in candidates)
+        {
+            var health = col.GetComponentInParent<EnemyHealth>();
+            if (health == null || health.IsDead) continue;
+
+            Transform targetRoot = health.transform;
+            if (targetRoot == _currentTarget) continue;  // 자기 자신 제외
+
+            Vector3 viewport = _camera.WorldToViewportPoint(targetRoot.position);
+
+            // 카메라 뒤거나 화면 밖이면 제외
+            if (viewport.z <= 0f) continue;
+            if (viewport.x < 0f || viewport.x > 1f || viewport.y < 0f || viewport.y > 1f) continue;
+
+            // 입력 방향에 있는 적만: 왼쪽 전환이면 현재보다 X 작은 적, 오른쪽이면 X 큰 적
+            float xDiff = viewport.x - currentX;
+            if (toLeft && xDiff >= 0f) continue;    // 왼쪽인데 오른쪽/같은 위치 → 제외
+            if (!toLeft && xDiff <= 0f) continue;   // 오른쪽인데 왼쪽/같은 위치 → 제외
+
+            // 방향 내에서 X 거리가 가장 가까운 적 (현재 타겟에 인접한 적부터)
+            float xDist = Mathf.Abs(xDiff);
+            if (xDist < bestXDist)
+            {
+                bestXDist = xDist;
+                best = targetRoot;
+            }
+        }
+
+        if (best != null) SetTarget(best);
     }
 
     /// <summary>락온 중 타겟이 죽었거나 해제 거리를 넘으면 자동 해제.</summary>
