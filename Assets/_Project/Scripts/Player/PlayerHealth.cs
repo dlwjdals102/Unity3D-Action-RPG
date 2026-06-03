@@ -1,5 +1,6 @@
 using UnityEngine;
 using System;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// 플레이어의 체력 관리 + IDamageable 구현.
@@ -22,6 +23,9 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
     /// <summary>체력 변경 시 발행. (현재 체력, 최대 체력). HUD 등이 구독.</summary>
     public event Action<int, int> OnHealthChanged;
+
+    /// <summary>사망 시 1회 발행 (상태머신의 DeathState 전환 + 리스폰 시스템이 구독).</summary>
+    public event Action OnDeath;
 
     // === Public Properties ===
     public int CurrentHealth => _currentHealth;
@@ -69,10 +73,10 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         Vector3 textPosition = transform.position + Vector3.up * _damageTextHeight;
         DamageTextManager.Instance?.Spawn(info.Amount, textPosition);
 
-        // 사망 처리 (지금은 로그만, 미래 확장 예정)
+        // 사망 처리: 이벤트 발행 (상태머신이 DeathState 전환, 리스폰 시스템이 부활 처리)
         if (IsDead)
         {
-            Debug.Log("[PlayerHealth] Player died!");
+            OnDeath?.Invoke();
         }
     }
 
@@ -84,5 +88,43 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     public void SetInvincible(bool value)
     {
         _isInvincible = value;
+    }
+
+    /// <summary>
+    /// 지정량 회복 (최대 체력 초과 안 함). 향후 물약 등에 사용.
+    /// </summary>
+    public void Heal(int amount)
+    {
+        if (amount <= 0) return;
+        if (IsDead) return;  // 사망 상태는 ResetHealth 로만 복구
+
+        _currentHealth += amount;
+        if (_currentHealth > MaxHealth) _currentHealth = MaxHealth;
+
+        OnHealthChanged?.Invoke(_currentHealth, MaxHealth);
+    }
+
+    /// <summary>
+    /// 최대 체력으로 완전 회복 (부활/화톳불 휴식). 사망 상태도 복구.
+    /// </summary>
+    public void ResetHealth()
+    {
+        _currentHealth = MaxHealth;
+        OnHealthChanged?.Invoke(_currentHealth, MaxHealth);
+    }
+
+    // 임시 테스트용: K 키로 즉사. 리스폰 검증 후 제거.
+    private void Update()
+    {
+        if (Keyboard.current != null && Keyboard.current.kKey.wasPressedThisFrame)
+        {
+            var info = new DamageInfo
+            {
+                Amount = 50,
+                Source = gameObject,
+                HitPoint = transform.position
+            };
+            TakeDamage(info);
+        }
     }
 }

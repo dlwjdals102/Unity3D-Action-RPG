@@ -115,6 +115,15 @@ public class EnemyAnimator : MonoBehaviour
         _animator.SetTrigger(DeathTriggerHash);
     }
 
+    /// <summary>
+    /// 사망 애니메이션 상태 리셋 (리스폰 시). Locomotion 으로 복귀 + 플래그 초기화.
+    /// </summary>  
+    public void ResetDeathState()
+    {
+        _isDeathFinished = false;
+        PlayLocomotion();  // 사망 자세 → 기본 자세
+    }
+
     // ========================================================================
     // === Animation Event Callbacks (EnemyAnimationEventReceiver 가 라우팅) ===
     // ========================================================================

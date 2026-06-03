@@ -74,4 +74,13 @@ public class EnemyHealth : MonoBehaviour, IDamageable
             OnDamaged?.Invoke();
         }
     }
+
+    /// <summary>
+    /// 체력을 최대로 복구 (화톳불 리스폰 시 부활). 사망 상태도 복구.
+    /// </summary>
+    public void ResetHealth()
+    {
+        _currentHealth = MaxHealth;
+        OnDamaged?.Invoke();  // 체력바 갱신 (머리 위 바 등)
+    }
 }

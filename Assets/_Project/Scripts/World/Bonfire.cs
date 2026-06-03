@@ -1,0 +1,82 @@
+using UnityEngine;
+
+/// <summary>
+/// 화톳불. 플레이어가 트리거 범위 안에서 상호작용(F)하면 휴식한다.
+/// 휴식 시 이 화톳불 위치를 체크포인트로 등록 (BonfireManager).
+/// 
+/// 트리거 범위 진입/이탈을 OnTriggerEnter/Exit 로 감지하고, 범위 안일 때만 F 입력을 처리한다.
+/// (회복/적 리스폰은 휴식 시 추가 연결 예정 - [D][E])
+/// 
+/// 필요: 이 오브젝트에 Trigger 로 설정된 Collider, 플레이어에 "Player" 태그.
+/// </summary>
+public class Bonfire : MonoBehaviour
+{
+    [Header("Interaction")]
+    [Tooltip("상호작용 가능 거리 표시용 (실제 감지는 Trigger Collider)")]
+    [SerializeField] private Transform _restPoint;  // 휴식 시 리스폰될 지점 (비우면 자기 위치)
+
+    private PlayerController _playerInRange;  // 범위 안 플레이어 (없으면 null)
+
+    private void OnTriggerEnter(Collider other)
+    {
+        // 플레이어가 범위에 진입
+        var controller = other.GetComponentInParent<PlayerController>();
+        if (controller != null)
+        {
+            _playerInRange = controller;
+            Debug.Log("[Bonfire] 휴식 가능 (F)");  // 임시 - 추후 UI 프롬프트로
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        var controller = other.GetComponentInParent<PlayerController>();
+        if (controller != null && controller == _playerInRange)
+        {
+            _playerInRange = null;
+        }
+    }
+
+    private void Update()
+    {
+        // 범위 안 + F 입력 → 휴식
+        if (_playerInRange == null) return;
+
+        if (_playerInRange.InteractRequested)
+        {
+            // 전투 중에는 휴식 불가 (소울라이크: 안전할 때만 정비)
+            if (EnemyRespawnManager.Instance != null &&
+                EnemyRespawnManager.Instance.AnyEnemyInCombat())
+            {
+                Debug.Log("[Bonfire] 전투 중에는 휴식할 수 없습니다.");
+                return;
+            }
+
+            Rest();
+        }
+    }
+
+    /// <summary>휴식: 체크포인트 등록. (회복/적 리스폰은 [D][E]에서 추가)</summary>
+    private void Rest()
+    {
+        Vector3 restPos = _restPoint != null ? _restPoint.position : transform.position;
+        Quaternion restRot = _restPoint != null ? _restPoint.rotation : transform.rotation;
+
+        if (BonfireManager.Instance != null)
+        {
+            BonfireManager.Instance.SetCheckpoint(restPos, restRot);
+        }
+
+        // 휴식 시 체력 완전 회복
+        var health = _playerInRange.GetComponent<PlayerHealth>();
+        if (health != null) health.ResetHealth();
+
+        // 적 전체 리스폰 (소울라이크: 휴식하면 잡몹 부활)
+        if (EnemyRespawnManager.Instance != null)
+        {
+            EnemyRespawnManager.Instance.RespawnAll();
+        }
+
+        Debug.Log("[Bonfire] 휴식했습니다. 체크포인트 등록 완료.");
+    }
+}

@@ -71,6 +71,36 @@ public class EnemyMovement : MonoBehaviour
     }
 
     /// <summary>
+    /// NavMeshAgent 안전 순간이동 (리스폰 등). transform 직접 이동 대신 Warp.
+    /// </summary>
+    public void Warp(Vector3 position)
+    {
+        if (_agent != null)
+        {
+            _agent.Warp(position);
+        }
+        else
+        {
+            transform.position = position;
+        }
+    }
+
+    /// <summary>
+    /// NavMeshAgent 를 정상 이동 가능 상태로 복구 (리스폰 시).
+    /// 전투 중 StopMoving(isStopped) 이나 BeginCharge(updatePosition=false) 상태가
+    /// 남아있으면 부활 후 움직이지 못하므로, 모든 Agent 플래그를 기본값으로 되돌린다.
+    /// </summary>
+    public void ResetAgent()
+    {
+        if (_agent == null) return;
+
+        _agent.updatePosition = true;   // BeginCharge 에서 false 됐을 수 있음
+        _agent.updateRotation = true;
+        _agent.isStopped = false;       // StopMoving/BeginCharge 에서 true 됐을 수 있음
+        _agent.ResetPath();             // 이전 경로 제거
+    }
+
+    /// <summary>
     /// 즉시 이동 정지. 경로도 초기화.
     /// AttackState 진입 시 또는 정지 필요 시 호출.
     /// </summary>

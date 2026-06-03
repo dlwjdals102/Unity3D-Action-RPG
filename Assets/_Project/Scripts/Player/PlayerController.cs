@@ -26,6 +26,7 @@ public class PlayerController : MonoBehaviour
     private bool _lockOnRequested;
     private bool _switchTargetLeftRequested;
     private bool _switchTargetRightRequested;
+    private bool _interactRequested;
 
     // === Public Read-Only Access ===
     public Vector2 MoveInput => _moveInput;
@@ -37,6 +38,7 @@ public class PlayerController : MonoBehaviour
     public bool LockOnRequested => _lockOnRequested;
     public bool SwitchTargetLeftRequested => _switchTargetLeftRequested;
     public bool SwitchTargetRightRequested => _switchTargetRightRequested;
+    public bool InteractRequested => _interactRequested;
 
     private void Awake()
     {
@@ -64,6 +66,7 @@ public class PlayerController : MonoBehaviour
         _inputActions.Player.LockOn.performed += ctx => OnLockOnPressed();
         _inputActions.Player.SwitchTargetLeft.performed += ctx => OnSwitchTargetLeftPressed();
         _inputActions.Player.SwitchTargetRight.performed += ctx => OnSwitchTargetRightPressed();
+        _inputActions.Player.Interact.performed += ctx => OnInteractPressed();
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
@@ -89,6 +92,7 @@ public class PlayerController : MonoBehaviour
         _lockOnRequested = false;
         _switchTargetLeftRequested = false;
         _switchTargetRightRequested = false;
+        _interactRequested = false;
     }
 
     private void OnDodgePressed()
@@ -125,5 +129,11 @@ public class PlayerController : MonoBehaviour
     {
         // 오른쪽 적으로 타겟 전환 요청. LockOnSystem 이 처리.
         _switchTargetRightRequested = true;
+    }
+
+    private void OnInteractPressed()
+    {
+        // 상호작용 요청 (화톳불 휴식 등). 화톳불이 감지해 처리.
+        _interactRequested = true;
     }
 }

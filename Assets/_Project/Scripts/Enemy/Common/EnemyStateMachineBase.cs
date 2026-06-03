@@ -46,6 +46,9 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
     // 사망/피격 이벤트 구독용 (내부 보유)
     protected EnemyHealth _health;
 
+    private Vector3 _initialPosition;
+    private Quaternion _initialRotation;
+
     // === Public Accessors (상태가 접근) ===
     /// <summary>적이 추격할 대상. ChaseState/AttackState 가 거리/방향 계산에 활용.</summary>
     public Transform Target => _target;
@@ -96,6 +99,10 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
 
         // 파생이 자기 상태 인스턴스 생성
         CreateStates();
+
+        // 초기 위치/회전 기억 (화톳불 휴식 시 리스폰 복원용)
+        _initialPosition = transform.position;
+        _initialRotation = transform.rotation;
     }
 
     protected virtual void OnEnable()
@@ -146,6 +153,43 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
 
         CurrentState = newState;
         CurrentState.OnEnter();
+    }
+
+    /// <summary>
+    /// 적을 초기 상태로 되돌린다 (화톳불 휴식 시 리스폰).
+    /// 죽어서 비활성된 적도 다시 활성화하여 부활시킨다.
+    /// 위치/회전 복원 + 체력 복구 + 콜라이더 재활성 + 초기 상태(순찰) 진입.
+    /// </summary>
+    public virtual void ResetToInitial()
+    {
+        // 1. 비활성(사망) 상태면 다시 활성화 → OnEnable 이 이벤트 재구독
+        if (!gameObject.activeSelf)
+        {
+            gameObject.SetActive(true);
+        }
+
+        // 2. 위치/회전 복원 (NavMeshAgent 안전 이동) + Agent 상태 재개
+        transform.rotation = _initialRotation;
+        if (Movement != null)
+        {
+            Movement.Warp(_initialPosition);
+            Movement.ResetAgent();  // isStopped/updatePosition 등 복구 (전투 중 멈춤 방지)
+        }
+        else
+        {
+            transform.position = _initialPosition;
+        }
+
+        // 3. 체력 복구
+        if (_health != null) _health.ResetHealth();
+
+        // 4. 콜라이더 재활성 (사망 시 비활성됐던 것)
+        var col = GetComponent<Collider>();
+        if (col != null) col.enabled = true;
+
+        // 5. 사망 애니 리셋 + 초기 상태(순찰) 진입
+        if (Animator != null) Animator.ResetDeathState();
+        ChangeState(GetInitialState());
     }
 
     // ========================================================================

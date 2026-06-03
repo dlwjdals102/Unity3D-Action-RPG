@@ -19,6 +19,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerAttacker Attacker { get; private set; }
     public PlayerStamina Stamina { get; private set; }
     public LockOnSystem LockOn { get; private set; }
+    public PlayerHealth Health { get; private set; }
 
     // === State Instances (1번만 생성, 재사용) ===
     public IdleState IdleState { get; private set; }
@@ -28,6 +29,7 @@ public class PlayerStateMachine : MonoBehaviour
     public LandState LandState { get; private set; }
     public DodgeState DodgeState { get; private set; }
     public AttackState AttackState { get; private set; }
+    public DeathState DeathState { get; private set; }
 
     // === Current State ===
     public PlayerStateBase CurrentState { get; private set; }
@@ -41,6 +43,7 @@ public class PlayerStateMachine : MonoBehaviour
         Attacker = GetComponent<PlayerAttacker>();
         Stamina = GetComponent<PlayerStamina>();
         LockOn = GetComponent<LockOnSystem>();
+        Health = GetComponent<PlayerHealth>();
 
         // 상태 인스턴스 생성
         IdleState = new IdleState(this);
@@ -50,6 +53,23 @@ public class PlayerStateMachine : MonoBehaviour
         LandState = new LandState(this);
         DodgeState = new DodgeState(this);
         AttackState = new AttackState(this);
+        DeathState = new DeathState(this);
+    }
+
+    private void OnEnable()
+    {
+        if (Health != null) Health.OnDeath += HandleDeath;
+    }
+
+    private void OnDisable()
+    {
+        if (Health != null) Health.OnDeath -= HandleDeath;
+    }
+
+    /// <summary>사망 이벤트 수신 → DeathState 전환.</summary>
+    private void HandleDeath()
+    {
+        ChangeState(DeathState);
     }
 
     private void Start()
