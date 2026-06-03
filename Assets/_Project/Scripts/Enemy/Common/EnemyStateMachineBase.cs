@@ -65,6 +65,12 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
     // === Current State ===
     public EnemyStateBase CurrentState { get; private set; }
 
+    /// <summary>
+    /// 전투 상태 여부 (순찰이 아니면 전투 중 = 플레이어를 감지해 추격/공격 중).
+    /// 머리 위 체력바 표시 등에 사용. 파생 클래스가 자신의 PatrolState 와 비교해 구현.
+    /// </summary>
+    public virtual bool IsInCombat => false;
+
     // ========================================================================
     // === Unity Lifecycle (파생이 override 가능, base 호출 필수) ===
     // ========================================================================

@@ -177,6 +177,8 @@ public class BossStateMachine : EnemyStateMachineBase
     public override void ToPatrol() => ChangeState(PatrolState);
     public override void ToChase() => ChangeState(ChaseState);
     public override void ToAttack() => ChangeState(AttackState);
+    public override bool IsInCombat =>
+        CurrentState != null && CurrentState != PatrolState && CurrentState != DeathState;
 
     /// <summary>돌진 상태로 전환. (임시 검증용으로 직접 호출, [2-3]에서 패턴 선택기가 호출)</summary>
     public void ToCharge() => ChangeState(ChargeState);

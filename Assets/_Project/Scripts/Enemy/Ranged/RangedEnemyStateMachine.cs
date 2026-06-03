@@ -71,4 +71,6 @@ public class RangedEnemyStateMachine : EnemyStateMachineBase
     public override void ToPatrol() => ChangeState(PatrolState);
     public override void ToChase() => ChangeState(ChaseState);
     public override void ToAttack() => ChangeState(AttackState);
+    public override bool IsInCombat =>
+        CurrentState != null && CurrentState != PatrolState && CurrentState != DeathState;
 }
