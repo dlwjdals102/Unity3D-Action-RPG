@@ -14,13 +14,19 @@ public class BonfireManager : MonoBehaviour
     private Quaternion _checkpointRotation;
     private bool _hasCheckpoint;
 
-    /// <summary>체크포인트가 한 번이라도 등록되었는지 (게임 시작 직후엔 false).</summary>
+    /// <summary>
+    /// 체크포인트가 한 번이라도 등록되었는지 (게임 시작 직후엔 false).
+    /// </summary>
     public bool HasCheckpoint => _hasCheckpoint;
 
-    /// <summary>현재 체크포인트 위치 (리스폰 지점).</summary>
+    /// <summary>
+    /// 현재 체크포인트 위치 (리스폰 지점).
+    /// </summary>
     public Vector3 CheckpointPosition => _checkpointPosition;
 
-    /// <summary>현재 체크포인트에서 바라볼 방향.</summary>
+    /// <summary>
+    /// 현재 체크포인트에서 바라볼 방향.
+    /// </summary>
     public Quaternion CheckpointRotation => _checkpointRotation;
 
     private void Awake()
@@ -33,7 +39,9 @@ public class BonfireManager : MonoBehaviour
         Instance = this;
     }
 
-    /// <summary>화톳불 휴식 시 호출. 해당 화톳불 위치를 리스폰 지점으로 등록.</summary>
+    /// <summary>
+    /// 화톳불 휴식 시 호출. 해당 화톳불 위치를 리스폰 지점으로 등록.
+    /// </summary>
     public void SetCheckpoint(Vector3 position, Quaternion rotation)
     {
         _checkpointPosition = position;

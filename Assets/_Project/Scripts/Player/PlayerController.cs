@@ -27,6 +27,7 @@ public class PlayerController : MonoBehaviour
     private bool _switchTargetLeftRequested;
     private bool _switchTargetRightRequested;
     private bool _interactRequested;
+    private bool _toggleInventoryRequested;
 
     // === Public Read-Only Access ===
     public Vector2 MoveInput => _moveInput;
@@ -39,6 +40,7 @@ public class PlayerController : MonoBehaviour
     public bool SwitchTargetLeftRequested => _switchTargetLeftRequested;
     public bool SwitchTargetRightRequested => _switchTargetRightRequested;
     public bool InteractRequested => _interactRequested;
+    public bool ToggleInventoryRequested => _toggleInventoryRequested;
 
     private void Awake()
     {
@@ -67,6 +69,7 @@ public class PlayerController : MonoBehaviour
         _inputActions.Player.SwitchTargetLeft.performed += ctx => OnSwitchTargetLeftPressed();
         _inputActions.Player.SwitchTargetRight.performed += ctx => OnSwitchTargetRightPressed();
         _inputActions.Player.Interact.performed += ctx => OnInteractPressed();
+        _inputActions.Player.ToggleInventory.performed += ctx => OnToggleInventoryPressed();
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
@@ -93,6 +96,7 @@ public class PlayerController : MonoBehaviour
         _switchTargetLeftRequested = false;
         _switchTargetRightRequested = false;
         _interactRequested = false;
+        _toggleInventoryRequested = false;
     }
 
     private void OnDodgePressed()
@@ -135,5 +139,10 @@ public class PlayerController : MonoBehaviour
     {
         // 상호작용 요청 (화톳불 휴식 등). 화톳불이 감지해 처리.
         _interactRequested = true;
+    }
+
+    private void OnToggleInventoryPressed()
+    {
+        _toggleInventoryRequested = true;
     }
 }
