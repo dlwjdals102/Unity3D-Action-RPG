@@ -9,7 +9,6 @@ public enum EquipmentSlot
     Weapon, Shield, Helmet, Chest, Legs, Boots, Gloves
 }
 
-
 /// <summary>
 /// 장비 아이템 (무기/방패/방어구). ItemData 를 상속.
 /// 착용 슬롯(부위)과 스탯 보정(공격력/방어력)을 가진다.

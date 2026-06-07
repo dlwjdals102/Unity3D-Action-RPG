@@ -40,6 +40,19 @@ public class Inventory : MonoBehaviour
     /// </summary>
     public IReadOnlyList<InventorySlot> Slots => _slots;
 
+    // 임시 테스트용: 시작 시 아이템 추가. 확인 후 제거.
+    [Header("=== 임시 테스트 ===")]
+    [SerializeField] private ItemData _test1;  // 칼
+    [SerializeField] private ItemData _test2;  // 방패
+    [SerializeField] private ItemData _test3;  // 물약
+
+    private void Start()
+    {
+        if (_test1 != null) AddItem(_test1, 1);
+        if (_test2 != null) AddItem(_test2, 1);
+        if (_test3 != null) AddItem(_test3, 5);
+    }
+
     /// <summary>
     /// 아이템 추가. 중첩 가능하면 기존 슬롯에 쌓고, 아니면 새 슬롯.
     /// 슬롯이 꽉 차면 추가 실패 (false).

@@ -22,6 +22,8 @@ public class InventoryUI : MonoBehaviour
     [Tooltip("격자 칸들 (고정 개수, 미리 배치)")]
     [SerializeField] private InventorySlotUI[] _slotUIs;
 
+    [SerializeField] private EquipmentManager _equipment;
+
     private bool _isOpen;
 
     private void Awake()
@@ -33,11 +35,29 @@ public class InventoryUI : MonoBehaviour
     private void OnEnable()
     {
         if (_inventory != null) _inventory.OnInventoryChanged += Refresh;
+
+        // 슬롯 클릭 콜백 등록
+        if (_slotUIs != null)
+        {
+            foreach (var slotUI in _slotUIs)
+            {
+                if (slotUI != null) slotUI.OnSlotClicked += HandleSlotClicked;
+            }
+        }
     }
 
     private void OnDisable()
     {
         if (_inventory != null) _inventory.OnInventoryChanged -= Refresh;
+
+        // 슬롯 클릭 콜백 해제
+        if (_slotUIs != null)
+        {
+            foreach (var slotUI in _slotUIs)
+            {
+                if (slotUI != null) slotUI.OnSlotClicked -= HandleSlotClicked;
+            }
+        }
     }
 
     private void Update()
@@ -56,7 +76,18 @@ public class InventoryUI : MonoBehaviour
         _isOpen = !_isOpen;
         if (_panelRoot != null) _panelRoot.SetActive(_isOpen);
 
-        if (_isOpen) Refresh();  // 열 때 최신 상태로 갱신
+        // 인벤토리 열림: 커서 표시/해제, 닫힘: 다시 잠금/숨김
+        if (_isOpen)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            Refresh();
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
     }
 
     /// <summary>
@@ -76,5 +107,15 @@ public class InventoryUI : MonoBehaviour
             InventorySlot slot = (i < slots.Count) ? slots[i] : null;
             _slotUIs[i].SetSlot(slot);
         }
+    }
+
+    /// <summary>인벤토리 슬롯 클릭 → 장비면 착용.</summary>
+    private void HandleSlotClicked(ItemData item)
+    {
+        if (item is EquipmentData equipment && _equipment != null)
+        {
+            _equipment.Equip(equipment);
+        }
+        // (소비 아이템 사용 등은 나중에 분기 추가)
     }
 }

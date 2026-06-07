@@ -32,4 +32,8 @@ public abstract class ItemData : ScriptableObject
     public string Description => _description;
     public int Price => _price;
     public int MaxStack => _maxStack;
+
+    // 임시 테스트용: 아이콘 대신 색으로 구분. 아이콘 생기면 제거.
+    [SerializeField] private Color _testColor = Color.white;
+    public Color TestColor => _testColor;
 }
