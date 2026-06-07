@@ -13,6 +13,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     [Header("Stats")]
     [Tooltip("플레이어 정적 스탯 (최대 체력 등). PlayerStatsConfig 에셋 할당")]
     [SerializeField] private PlayerStatsConfig _stats;
+    private PlayerStats _playerStats;  // 방어력 (공/방 스탯)
 
     [Header("Damage Text")]
     [Tooltip("데미지 텍스트가 표시될 머리 위 높이")]
@@ -40,6 +41,8 @@ public class PlayerHealth : MonoBehaviour, IDamageable
             Debug.LogError($"[PlayerHealth] PlayerStatsConfig not assigned on {gameObject.name}!");
         }
 
+        _playerStats = GetComponent<PlayerStats>();
+
         _currentHealth = MaxHealth;
     }
 
@@ -63,7 +66,11 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         if (_isInvincible) return;  // 무적 시 데미지 무시 (회피 무적 시간)
         if (info.Amount <= 0) return;
 
-        _currentHealth -= info.Amount;
+        // 방어력만큼 데미지 감소 (최소 1은 받음)
+        int defense = _playerStats != null ? _playerStats.Defense : 0;
+        int finalDamage = Mathf.Max(1, info.Amount - defense);
+
+        _currentHealth -= finalDamage;
         if (_currentHealth < 0) _currentHealth = 0;
 
         // 체력 변경 알림 (HUD 갱신)
@@ -71,7 +78,7 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
         // 머리 위에 데미지 텍스트 생성
         Vector3 textPosition = transform.position + Vector3.up * _damageTextHeight;
-        DamageTextManager.Instance?.Spawn(info.Amount, textPosition);
+        DamageTextManager.Instance?.Spawn(finalDamage, textPosition);
 
         // 사망 처리: 이벤트 발행 (상태머신이 DeathState 전환, 리스폰 시스템이 부활 처리)
         if (IsDead)

@@ -41,12 +41,8 @@ public class InventorySlotUI : MonoBehaviour, IPointerClickHandler
         // 아이콘
         if (_iconImage != null)
         {
-            /*_iconImage.sprite = slot.Item.Icon;
-            _iconImage.enabled = (slot.Item.Icon != null);  // 아이콘 없으면 숨김*/
-
             _iconImage.sprite = slot.Item.Icon;
-            _iconImage.enabled = true;
-            _iconImage.color = slot.Item.TestColor;  // 임시: 색으로 구분
+            _iconImage.enabled = (slot.Item.Icon != null);  // 아이콘 없으면 숨김
         }
 
         // 개수 (1개면 표시 안 함, 2개 이상만)

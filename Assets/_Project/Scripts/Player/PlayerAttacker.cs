@@ -7,6 +7,8 @@ using UnityEngine;
 /// </summary>
 public class PlayerAttacker : MonoBehaviour
 {
+    private PlayerStats _stats;
+
     [Header("Hit Detection")]
     [SerializeField] private Transform _hitOrigin;
     [SerializeField] private float _hitRadius = 1f;
@@ -26,6 +28,8 @@ public class PlayerAttacker : MonoBehaviour
         {
             Debug.LogError("[PlayerAttacker] HitOrigin not assigned! Please assign in Inspector.");
         }
+
+        _stats = GetComponent<PlayerStats>();
     }
 
     // ========================================================================
@@ -78,9 +82,12 @@ public class PlayerAttacker : MonoBehaviour
         {
             if (hit.TryGetComponent<IDamageable>(out var target))
             {
+                // 콤보 데미지(동작 위력) + 공격력(능력치, 장비 포함)
+                int attackBonus = _stats != null ? _stats.Attack : 0;
+
                 var info = new DamageInfo
                 {
-                    Amount = _currentDamage,
+                    Amount = _currentDamage + attackBonus,
                     Source = gameObject,
                     HitPoint = hit.ClosestPoint(_hitOrigin.position)
                 };

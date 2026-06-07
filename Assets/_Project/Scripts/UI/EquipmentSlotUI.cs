@@ -24,7 +24,7 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler
     /// <summary>착용 장비로 갱신. null 이면 빈 슬롯.</summary>
     public void SetEquipment(EquipmentData equipment)
     {
-        /*if (equipment == null || equipment.Icon == null)
+        if (equipment == null || equipment.Icon == null)
         {
             if (_iconImage != null) _iconImage.enabled = false;
             return;
@@ -34,20 +34,6 @@ public class EquipmentSlotUI : MonoBehaviour, IPointerClickHandler
         {
             _iconImage.sprite = equipment.Icon;
             _iconImage.enabled = true;
-        }*/
-
-        // 임시: 아이콘 없어도 TestColor 로 표시
-        if (equipment == null)
-        {
-            if (_iconImage != null) _iconImage.enabled = false;
-            return;
-        }
-
-        if (_iconImage != null)
-        {
-            _iconImage.sprite = equipment.Icon;
-            _iconImage.enabled = true;
-            _iconImage.color = equipment.TestColor;  // 임시: 색으로 구분
         }
     }
 

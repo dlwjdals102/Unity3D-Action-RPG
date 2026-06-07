@@ -18,6 +18,13 @@ public class PlayerStatsConfig : ScriptableObject
     [Tooltip("최대 체력")]
     [SerializeField] private int _maxHealth = 100;
 
+    [Header("Combat")]
+    [Tooltip("기본 공격력 (맨몸. 콤보 데미지에 더해짐)")]
+    [SerializeField] private int _baseAttack = 0;
+
+    [Tooltip("기본 방어력 (맨몸. 받는 데미지 감소)")]
+    [SerializeField] private int _baseDefense = 0;
+
     [Header("Stamina")]
     [Tooltip("최대 스태미나")]
     [SerializeField] private float _maxStamina = 100f;
@@ -30,6 +37,8 @@ public class PlayerStatsConfig : ScriptableObject
 
     // === Public Properties (읽기 전용) ===
     public int MaxHealth => _maxHealth;
+    public int BaseAttack => _baseAttack;
+    public int BaseDefense => _baseDefense;
     public float MaxStamina => _maxStamina;
     public float StaminaRegenRate => _staminaRegenRate;
     public float StaminaRegenDelay => _staminaRegenDelay;
