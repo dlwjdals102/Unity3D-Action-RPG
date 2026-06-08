@@ -15,6 +15,10 @@ public class EnemyConfig : ScriptableObject
     [Header("Health")]
     [SerializeField] private int _maxHealth = 50;
 
+    [Header("Reward")]
+    [Tooltip("Ã³Ä¡ ½Ã È¹µæ ¿µÈ¥")]
+    [SerializeField] private int _soulReward = 10;
+
     [Header("Movement")]
     [SerializeField] private float _walkSpeed = 2f;
     [SerializeField] private float _chaseSpeed = 4f;
@@ -43,6 +47,7 @@ public class EnemyConfig : ScriptableObject
 
     // === Public Properties (ÀĞ±â Àü¿ë) ===
     public int MaxHealth => _maxHealth;
+    public int SoulReward => _soulReward;
     public float WalkSpeed => _walkSpeed;
     public float ChaseSpeed => _chaseSpeed;
     public float AttackRange => _attackRange;

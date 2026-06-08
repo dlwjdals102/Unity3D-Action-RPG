@@ -66,7 +66,7 @@ public class EnemyHealth : MonoBehaviour, IDamageable
         // 사망 vs 피격 분기: 사망 시 OnDeath, 아니면 OnDamaged
         if (IsDead)
         {
-            Debug.Log($"[EnemyHealth] {gameObject.name} died!");
+            GrantSouls();  // 처치 보상 영혼 지급
             OnDeath?.Invoke();
         }
         else
@@ -82,5 +82,18 @@ public class EnemyHealth : MonoBehaviour, IDamageable
     {
         _currentHealth = MaxHealth;
         OnDamaged?.Invoke();  // 체력바 갱신 (머리 위 바 등)
+    }
+
+    /// <summary>처치 시 플레이어에게 영혼 지급.</summary>
+    private void GrantSouls()
+    {
+        if (_config == null || _config.SoulReward <= 0) return;
+
+        // 플레이어의 PlayerSouls 를 찾아 지급
+        var playerSouls = FindFirstObjectByType<PlayerSouls>();
+        if (playerSouls != null)
+        {
+            playerSouls.Add(_config.SoulReward);
+        }
     }
 }
