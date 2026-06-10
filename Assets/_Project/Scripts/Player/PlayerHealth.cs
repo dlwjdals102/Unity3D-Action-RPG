@@ -98,17 +98,20 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     }
 
     /// <summary>
-    /// 지정량 회복 (최대 체력 초과 안 함). 향후 물약 등에 사용.
+    /// 지정량 회복 (최대 체력 초과 안 함). 물약 등 소비 아이템에 사용.
+    /// 실제로 회복했으면 true. 사망/가득이면 false (호출자가 소비 여부 판단).
     /// </summary>
-    public void Heal(int amount)
+    public bool Heal(int amount)
     {
-        if (amount <= 0) return;
-        if (IsDead) return;  // 사망 상태는 ResetHealth 로만 복구
+        if (amount <= 0) return false;
+        if (IsDead) return false;  // 사망 상태는 ResetHealth 로만 복구
+        if (_currentHealth >= MaxHealth) return false;  // 가득 - 물약 낭비 방지
 
         _currentHealth += amount;
         if (_currentHealth > MaxHealth) _currentHealth = MaxHealth;
 
         OnHealthChanged?.Invoke(_currentHealth, MaxHealth);
+        return true;
     }
 
     /// <summary>

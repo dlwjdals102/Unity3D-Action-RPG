@@ -24,6 +24,8 @@ public class InventoryUI : MonoBehaviour
 
     [SerializeField] private EquipmentManager _equipment;
 
+    [SerializeField] private PlayerHealth _playerHealth;
+
     private bool _isOpen;
 
     private void Awake()
@@ -116,6 +118,13 @@ public class InventoryUI : MonoBehaviour
         {
             _equipment.Equip(equipment);
         }
-        // (소비 아이템 사용 등은 나중에 분기 추가)
+        // 소비 아이템: 사용(회복) 성공 시에만 1개 차감 (체력 가득이면 소비 안 함)
+        else if (item is ConsumableData consumable && _playerHealth != null && _inventory != null)
+        {
+            if (_playerHealth.Heal(consumable.HealAmount))
+            {
+                _inventory.RemoveItem(item, 1);
+            }
+        }
     }
 }
