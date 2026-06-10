@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 
@@ -18,6 +19,9 @@ public class PlayerRespawn : MonoBehaviour
     [Header("Respawn")]
     [Tooltip("사망 후 리스폰까지 대기 시간(초)")]
     [SerializeField] private float _respawnDelay = 1.5f;
+
+    /// <summary>부활 완료 시 발행 (YOU DIED 화면 숨김 등). OnDeath 와 쌍.</summary>
+    public event Action OnRespawned;
 
     private Vector3 _startPosition;       // 체크포인트 없을 때 사용 (게임 시작 위치)
     private Quaternion _startRotation;
@@ -70,6 +74,9 @@ public class PlayerRespawn : MonoBehaviour
 
         // 상태 복귀 (Idle)
         if (_stateMachine != null) _stateMachine.ChangeState(_stateMachine.IdleState);
+
+        // 부활 완료 알림 (YOU DIED 숨김 등)
+        OnRespawned?.Invoke();
     }
 
     /// <summary>CharacterController 충돌을 피해 안전하게 순간이동. (리스폰/로드 공용)</summary>
