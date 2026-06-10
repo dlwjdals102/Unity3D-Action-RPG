@@ -38,4 +38,11 @@ public class PlayerSouls : MonoBehaviour
         OnSoulsChanged?.Invoke(_souls);
         return true;
     }
+
+    /// <summary>로드 복원용: 영혼을 특정 값으로 설정.</summary>
+    public void SetSouls(int amount)
+    {
+        _souls = Mathf.Max(0, amount);
+        OnSoulsChanged?.Invoke(_souls);
+    }
 }

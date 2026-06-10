@@ -156,6 +156,19 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
     }
 
     /// <summary>
+    /// 같은 상태여도 OnExit → OnEnter 를 강제로 재실행하는 전환 (리셋/리스폰용).
+    /// 일반 전환은 ChangeState(중복 무시)를 쓰고, 상태를 처음부터 다시 시작해야 하는
+    /// 리셋 흐름에서만 사용한다. (예: 순찰 중인 적을 초기화 → 순찰을 처음부터 재시작)
+    /// </summary>
+    protected void ForceChangeState(EnemyStateBase newState)
+    {
+        CurrentState?.OnExit();
+
+        CurrentState = newState;
+        CurrentState.OnEnter();
+    }
+
+    /// <summary>
     /// 적을 초기 상태로 되돌린다 (화톳불 휴식 시 리스폰).
     /// 죽어서 비활성된 적도 다시 활성화하여 부활시킨다.
     /// 위치/회전 복원 + 체력 복구 + 콜라이더 재활성 + 초기 상태(순찰) 진입.
@@ -187,9 +200,12 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
         var col = GetComponent<Collider>();
         if (col != null) col.enabled = true;
 
-        // 5. 사망 애니 리셋 + 초기 상태(순찰) 진입
+        // 5. 사망 애니 리셋 + 초기 상태(순찰) 재진입
+        // ChangeState 는 같은 상태면 무시하므로, 이미 순찰 중이던 적은 OnEnter 가
+        // 다시 실행되지 않아 (Warp + ResetPath 후) 새 목적지를 받지 못하고 멈춘다.
+        // 리셋은 "처음부터 다시" 가 목적이므로 강제 재진입을 사용한다.
         if (Animator != null) Animator.ResetDeathState();
-        ChangeState(GetInitialState());
+        ForceChangeState(GetInitialState());
     }
 
     // ========================================================================

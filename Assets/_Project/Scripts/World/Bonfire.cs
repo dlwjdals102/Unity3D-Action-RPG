@@ -17,6 +17,14 @@ public class Bonfire : MonoBehaviour
 
     private PlayerController _playerInRange;  // 범위 안 플레이어 (없으면 null)
 
+    private SaveCoordinator _saveCoordinator;
+
+    private void Awake()
+    {
+        // 세이브 조율자 캐싱 (씬에 하나)
+        _saveCoordinator = FindFirstObjectByType<SaveCoordinator>();
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         // 플레이어가 범위에 진입
@@ -77,6 +85,12 @@ public class Bonfire : MonoBehaviour
             EnemyRespawnManager.Instance.RespawnAll();
         }
 
-        Debug.Log("[Bonfire] 휴식했습니다. 체크포인트 등록 완료.");
+        // 진행 저장 (휴식 = 저장, 소울라이크 정석. 체크포인트/영혼/인벤토리/장비)
+        if (_saveCoordinator != null)
+        {
+            _saveCoordinator.SaveGame();
+        }
+
+        Debug.Log("[Bonfire] 휴식: 회복 + 적 리스폰 + 체크포인트 + 저장.");
     }
 }

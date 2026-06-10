@@ -91,4 +91,19 @@ public class EquipmentManager : MonoBehaviour
         }
         return total;
     }
+
+    /// <summary>로드 복원용: 인벤토리와 무관하게 슬롯에 직접 착용 설정.</summary>
+    public void SetEquippedDirect(EquipmentData equipment)
+    {
+        if (equipment == null) return;
+        _equipped[equipment.Slot] = equipment;
+        OnEquipmentChanged?.Invoke();
+    }
+
+    /// <summary>로드 복원용: 모든 장비 해제 (슬롯 비우기, 인벤토리 반환 없음).</summary>
+    public void ClearAll()
+    {
+        _equipped.Clear();
+        OnEquipmentChanged?.Invoke();
+    }
 }

@@ -110,6 +110,13 @@ public class Inventory : MonoBehaviour
         OnInventoryChanged?.Invoke();
     }
 
+    /// <summary>인벤토리 전체 비우기 (로드 전 초기화용).</summary>
+    public void Clear()
+    {
+        _slots.Clear();
+        OnInventoryChanged?.Invoke();
+    }
+
     /// <summary>
     /// 특정 아이템 보유 총 개수.
     /// </summary>

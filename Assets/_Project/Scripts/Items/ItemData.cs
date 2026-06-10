@@ -9,6 +9,10 @@ using UnityEngine;
 /// </summary>
 public abstract class ItemData : ScriptableObject
 {
+    [Header("Identity")]
+    [Tooltip("고유 ID (세이브/로드 키). 아이템마다 유일해야 하며, 한번 정하면 바꾸지 않는다.")]
+    [SerializeField] private string _id;
+
     [Header("Common")]
     [Tooltip("아이템 표시 이름")]
     [SerializeField] private string _displayName = "Item";
@@ -27,6 +31,7 @@ public abstract class ItemData : ScriptableObject
     [SerializeField] private int _maxStack = 1;
 
     // === Public Properties ===
+    public string Id => _id;
     public string DisplayName => _displayName;
     public Sprite Icon => _icon;
     public string Description => _description;

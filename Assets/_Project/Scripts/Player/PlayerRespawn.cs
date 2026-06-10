@@ -72,8 +72,8 @@ public class PlayerRespawn : MonoBehaviour
         if (_stateMachine != null) _stateMachine.ChangeState(_stateMachine.IdleState);
     }
 
-    /// <summary>CharacterController 충돌을 피해 안전하게 순간이동.</summary>
-    private void TeleportTo(Vector3 position, Quaternion rotation)
+    /// <summary>CharacterController 충돌을 피해 안전하게 순간이동. (리스폰/로드 공용)</summary>
+    public void TeleportTo(Vector3 position, Quaternion rotation)
     {
         if (_characterController != null) _characterController.enabled = false;
 
