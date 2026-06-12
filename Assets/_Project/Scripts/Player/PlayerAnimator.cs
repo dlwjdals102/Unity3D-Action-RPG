@@ -22,6 +22,7 @@ public class PlayerAnimator : MonoBehaviour
     private static readonly int LocomotionTriggerHash = Animator.StringToHash("Locomotion");
     private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
     private static readonly int ComboIndexHash = Animator.StringToHash("ComboIndex");
+    private static readonly int IsGuardingHash = Animator.StringToHash("IsGuarding");
 
     // === Animation Settings ===
     [Header("Animation")]
@@ -79,6 +80,23 @@ public class PlayerAnimator : MonoBehaviour
     {
         if (_animator != null)
             _animator.SetBool(IsGroundedHash, isGrounded);
+    }
+
+    /// <summary>가드 자세 on/off (hold 입력이라 트리거 대신 bool).</summary>
+    public void SetGuarding(bool isGuarding)
+    {
+        if (_animator != null)
+        {
+            // 잔류 트리거 제거: 이미 Locomotion 인 상태에서 쏜 Locomotion 트리거가
+            // 소비되지 않고 남아, 가드 진입 직후 Locomotion 으로 되끌고 가서
+            // 가드 모션이 두 번 재생되는 문제 방지.
+            if (isGuarding)
+            {
+                _animator.ResetTrigger(LocomotionTriggerHash);
+            }
+
+            _animator.SetBool(IsGuardingHash, isGuarding);
+        }
     }
 
     /// <summary>

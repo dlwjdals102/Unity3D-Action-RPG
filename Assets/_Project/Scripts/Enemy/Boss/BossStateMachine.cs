@@ -232,4 +232,7 @@ public class BossStateMachine : EnemyStateMachineBase
         chosen.Execute();
         return true;
     }
+
+    /// <summary>보스는 패리로 경직되지 않는다 (밸런스 - 가드는 가능).</summary>
+    public override bool CanBeParried => false;
 }

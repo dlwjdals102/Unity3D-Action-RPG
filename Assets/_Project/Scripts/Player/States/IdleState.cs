@@ -38,6 +38,13 @@ public class IdleState : PlayerStateBase
             return;
         }
 
+        // 2.5 가드 입력(유지) + 방패 착용 → GuardState
+        if (_stateMachine.Controller.IsGuardHeld && _stateMachine.CanGuard)
+        {
+            _stateMachine.ChangeState(_stateMachine.GuardState);
+            return;
+        }
+
         // 3. 공격 입력 → AttackState (전투 게임 우선)
         // 1타 비용을 진입 시 소모. AttackState 의 OnEnter 는 별도 소모 안 함.
         if (_stateMachine.Controller.AttackRequested &&

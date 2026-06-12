@@ -22,6 +22,7 @@ public class EnemyAnimator : MonoBehaviour
     private static readonly int LocomotionTriggerHash = Animator.StringToHash("Locomotion");
     private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
     private static readonly int DeathTriggerHash = Animator.StringToHash("Death");
+    private static readonly int IsStunnedHash = Animator.StringToHash("IsStunned");
 
     [Header("Animation Settings")]
     [Tooltip("MoveSpeed 댐핑 시간 (부드러운 전환)")]
@@ -60,6 +61,15 @@ public class EnemyAnimator : MonoBehaviour
     {
         if (_animator == null) return;
         _animator.SetFloat(MoveSpeedHash, normalizedSpeed, _moveSpeedDampTime, Time.deltaTime);
+    }
+
+    /// <summary>경직(스턴) on/off. 경직 상태 동안 비틀거리는 루프 재생.</summary>
+    public void SetStunned(bool isStunned)
+    {
+        if (_animator != null)
+        {
+            _animator.SetBool(IsStunnedHash, isStunned);
+        }
     }
 
     /// <summary>

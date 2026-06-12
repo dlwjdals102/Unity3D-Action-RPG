@@ -68,6 +68,9 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
     // === Current State ===
     public EnemyStateBase CurrentState { get; private set; }
 
+    /// <summary>경직 상태 (공통). 패리 성공 시 EnterParriedStun 으로 진입.</summary>
+    public EnemyStunState StunState { get; private set; }
+
     /// <summary>
     /// 전투 상태 여부 (순찰이 아니면 전투 중 = 플레이어를 감지해 추격/공격 중).
     /// 머리 위 체력바 표시 등에 사용. 파생 클래스가 자신의 PatrolState 와 비교해 구현.
@@ -99,6 +102,8 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
 
         // 파생이 자기 상태 인스턴스 생성
         CreateStates();
+
+        StunState = new EnemyStunState(this);  // 공통 상태라 베이스가 직접 생성
 
         // 초기 위치/회전 기억 (화톳불 휴식 시 리스폰 복원용)
         _initialPosition = transform.position;
@@ -291,6 +296,20 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
     /// Config 의 DetectionRange 접근 (파생의 HandleDamaged 가 활용).
     /// </summary>
     protected float DetectionRange => _config != null ? _config.DetectionRange : 0f;
+
+    /// <summary>패리로 경직될 수 있는가. 보스는 false 로 오버라이드 (밸런스 보호).</summary>
+    public virtual bool CanBeParried => true;
+
+    /// <summary>패리 성공 시 경직 진입 (PlayerHealth 가 호출). 패리 불가/사망/이미 경직이면 무시.</summary>
+    public void EnterParriedStun(float duration)
+    {
+        if (!CanBeParried) return;
+        if (_health != null && _health.IsDead) return;
+        if (CurrentState == StunState) return;
+
+        StunState.SetDuration(duration);
+        ChangeState(StunState);
+    }
 
     // ========================================================================
     // === Editor Visualization (공통) ===

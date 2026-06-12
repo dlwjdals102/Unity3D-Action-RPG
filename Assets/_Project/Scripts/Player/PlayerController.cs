@@ -18,6 +18,7 @@ public class PlayerController : MonoBehaviour
     private Vector2 _moveInput;
     private Vector2 _lookInput;
     private bool _isSprintHeld;
+    private bool _isGuardHeld;
 
     // === Trigger Flags (한 프레임 동안만 유효, 각 상태가 읽고 LateUpdate 에서 자동 리셋) ===
     private bool _jumpRequested;
@@ -33,6 +34,7 @@ public class PlayerController : MonoBehaviour
     public Vector2 MoveInput => _moveInput;
     public Vector2 LookInput => _lookInput;
     public bool IsSprintHeld => _isSprintHeld;
+    public bool IsGuardHeld => _isGuardHeld;
     public bool JumpRequested => _jumpRequested;
     public bool DodgeRequested => _dodgeRequested;
     public bool AttackRequested => _attackRequested;
@@ -57,9 +59,11 @@ public class PlayerController : MonoBehaviour
         _inputActions.Player.Look.performed += ctx => _lookInput = ctx.ReadValue<Vector2>();
         _inputActions.Player.Look.canceled += ctx => _lookInput = Vector2.zero;
 
-        // 홀드 입력 (Sprint)
+        // 홀드 입력 (Sprint, Guard)
         _inputActions.Player.Sprint.performed += ctx => _isSprintHeld = true;
         _inputActions.Player.Sprint.canceled += ctx => _isSprintHeld = false;
+        _inputActions.Player.Guard.performed += ctx => _isGuardHeld = true;
+        _inputActions.Player.Guard.canceled += ctx => _isGuardHeld = false;
 
         // 트리거 입력 (Dodge, Jump, Attack) - 누르는 순간 1번 발동
         _inputActions.Player.Dodge.performed += ctx => OnDodgePressed();

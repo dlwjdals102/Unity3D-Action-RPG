@@ -20,6 +20,7 @@ public class PlayerStateMachine : MonoBehaviour
     public PlayerStamina Stamina { get; private set; }
     public LockOnSystem LockOn { get; private set; }
     public PlayerHealth Health { get; private set; }
+    public EquipmentManager Equipment { get; private set; }
 
     // === State Instances (1번만 생성, 재사용) ===
     public IdleState IdleState { get; private set; }
@@ -30,9 +31,14 @@ public class PlayerStateMachine : MonoBehaviour
     public DodgeState DodgeState { get; private set; }
     public AttackState AttackState { get; private set; }
     public DeathState DeathState { get; private set; }
+    public GuardState GuardState { get; private set; }
 
     // === Current State ===
     public PlayerStateBase CurrentState { get; private set; }
+
+    /// <summary>가드 가능 여부. 방패를 착용한 경우에만 가드할 수 있다 (장비 연동).</summary>
+    public bool CanGuard =>
+        Equipment != null && Equipment.GetEquipped(EquipmentSlot.Shield) != null;
 
     private void Awake()
     {
@@ -44,6 +50,7 @@ public class PlayerStateMachine : MonoBehaviour
         Stamina = GetComponent<PlayerStamina>();
         LockOn = GetComponent<LockOnSystem>();
         Health = GetComponent<PlayerHealth>();
+        Equipment = GetComponent<EquipmentManager>();
 
         // 상태 인스턴스 생성
         IdleState = new IdleState(this);
@@ -54,6 +61,7 @@ public class PlayerStateMachine : MonoBehaviour
         DodgeState = new DodgeState(this);
         AttackState = new AttackState(this);
         DeathState = new DeathState(this);
+        GuardState = new GuardState(this);
     }
 
     private void OnEnable()
