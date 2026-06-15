@@ -24,6 +24,11 @@ public class SaveData
     public bool hasCheckpoint;
     public float checkpointX, checkpointY, checkpointZ;
     public float checkpointRotY;  // 회전은 Y축만 (캐릭터 방향)
+
+    // 떨어진 영혼 (회수 전 사망 드롭 - 껐다 켜도 유지)
+    public bool hasSoulDrop;
+    public float soulDropX, soulDropY, soulDropZ;
+    public int soulDropAmount;
 }
 
 /// <summary>인벤토리 한 칸 저장 (아이템 ID + 개수).</summary>

@@ -73,6 +73,17 @@ public class SaveCoordinator : MonoBehaviour
             data.checkpointRotY = BonfireManager.Instance.CheckpointRotation.eulerAngles.y;
         }
 
+        // 떨어진 영혼
+        if (SoulDropManager.Instance != null && SoulDropManager.Instance.HasDrop)
+        {
+            Vector3 dropPos = SoulDropManager.Instance.DropPosition;
+            data.hasSoulDrop = true;
+            data.soulDropX = dropPos.x;
+            data.soulDropY = dropPos.y;
+            data.soulDropZ = dropPos.z;
+            data.soulDropAmount = SoulDropManager.Instance.DropAmount;
+        }
+
         // 파일 저장
         if (SaveManager.Instance != null) SaveManager.Instance.Save(data);
     }
@@ -124,6 +135,18 @@ public class SaveCoordinator : MonoBehaviour
             if (_playerRespawn != null)
             {
                 _playerRespawn.TeleportTo(pos, rot);
+            }
+        }
+
+        // 떨어진 영혼 복원 (기존 드롭 비우고 - Clear 후 복원 패턴)
+        if (SoulDropManager.Instance != null)
+        {
+            SoulDropManager.Instance.ClearDrop();
+            if (data.hasSoulDrop)
+            {
+                SoulDropManager.Instance.SpawnDrop(
+                    new Vector3(data.soulDropX, data.soulDropY, data.soulDropZ),
+                    data.soulDropAmount);
             }
         }
 
