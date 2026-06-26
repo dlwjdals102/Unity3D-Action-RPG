@@ -75,6 +75,13 @@ public class PlayerRespawn : MonoBehaviour
         // 상태 복귀 (Idle)
         if (_stateMachine != null) _stateMachine.ChangeState(_stateMachine.IdleState);
 
+        // 적 전체 초기화 (어그로 해제 + 위치/상태 원복).
+        // 사망-리스폰도 화톳불 휴식처럼 월드를 리셋한다.
+        if (EnemyRespawnManager.Instance != null)
+        {
+            EnemyRespawnManager.Instance.RespawnAll();
+        }
+
         // 부활 완료 알림 (YOU DIED 숨김 등)
         OnRespawned?.Invoke();
     }

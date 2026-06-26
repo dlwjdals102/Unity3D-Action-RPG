@@ -106,5 +106,5 @@ MonoBehaviour:
   _hitRadius: 0.3
   _obstacleLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 576
   _lifetime: 5

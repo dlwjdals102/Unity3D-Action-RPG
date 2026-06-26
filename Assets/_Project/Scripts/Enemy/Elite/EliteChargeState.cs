@@ -24,6 +24,8 @@ public class EliteChargeState : EnemyStateBase
     private bool _isStunned;
     private float _stunTimer;
     private bool _hasHit;
+    private bool _isWindingUp;
+    private float _windupTimer;
 
     public EliteChargeState(EnemyStateMachineBase stateMachine, EliteEnemyConfig config)
         : base(stateMachine)
@@ -33,7 +35,7 @@ public class EliteChargeState : EnemyStateBase
 
     public override void OnEnter()
     {
-        // Config 누락 가드 (폴백 상황)
+        // Config 누락 가드 (폴백)
         if (_eliteConfig == null)
         {
             Debug.LogError("[EliteChargeState] EliteEnemyConfig is null. Returning to chase.");
@@ -47,12 +49,11 @@ public class EliteChargeState : EnemyStateBase
             _attacker = _stateMachine.GetComponent<EliteEnemyAttacker>();
         }
 
-        // 상태 초기화
+        _isWindingUp = true;   // 예비동작부터 시작
         _isStunned = false;
         _hasHit = false;
-        _startPosition = _stateMachine.transform.position;
 
-        // 돌진 방향 고정 (Target 향함, 1회) - 이후 방향 안 바꿈 (직선, 회피 보상)
+        // 돌진 방향을 예비동작 시작 시점에 고정 (이후 추적 안 함 → 회피 보상)
         if (_stateMachine.Target != null)
         {
             _stateMachine.Movement.SetRotationImmediate(_stateMachine.Target.position);
@@ -66,17 +67,23 @@ public class EliteChargeState : EnemyStateBase
             _chargeDirection = _stateMachine.transform.forward;
         }
 
-        // 돌진 이동 모드 시작 (NavMeshAgent 자동 갱신 off)
-        _stateMachine.Movement.BeginCharge();
-
-        // 임시 돌진 모션 (Run). 폴리싱 단계에 돌진 전용 클립.
+        // 예비동작: 정지 + Idle. 실제 돌진(BeginCharge/Run)은 StartDash 에서.
+        _windupTimer = _eliteConfig.ChargeWindupDuration;
+        _stateMachine.Movement.StopMoving();
         _stateMachine.Animator.PlayLocomotion();
-        _stateMachine.Animator.SetMoveSpeed(1f);
+        _stateMachine.Animator.SetMoveSpeed(0f);
     }
 
     public override void OnUpdate()
     {
         if (_eliteConfig == null) return;
+
+        // === 예비동작 모드 ===
+        if (_isWindingUp)
+        {
+            UpdateWindup();
+            return;
+        }
 
         // === 경직 모드 ===
         if (_isStunned)
@@ -105,8 +112,12 @@ public class EliteChargeState : EnemyStateBase
             return;
         }
 
-        // 3. 직선 돌진 이동 (고정 방향)
-        _stateMachine.Movement.ChargeMove(_chargeDirection, _eliteConfig.ChargeSpeed);
+        // 3. 직선 돌진 이동 - 벽(NavMesh 경계)에 막히면 종료 (벽 = 회복 punish 창)
+        if (!_stateMachine.Movement.ChargeMove(_chargeDirection, _eliteConfig.ChargeSpeed))
+        {
+            EnterStun();
+            return;
+        }
     }
 
     /// <summary>
@@ -155,5 +166,31 @@ public class EliteChargeState : EnemyStateBase
             // 멀음: 추격
             _stateMachine.ToChase();
         }
+    }
+
+    /// <summary>
+    /// 예비동작 중 매 프레임. 방향 고정한 채 잠깐 정지(Idle) → 타이머 종료 시 실제 돌진.
+    /// </summary>
+    private void UpdateWindup()
+    {
+        // Idle 유지 (매 프레임 MoveSpeed 0 댐핑 수렴)
+        _stateMachine.Animator.SetMoveSpeed(0f);
+
+        _windupTimer -= Time.deltaTime;
+        if (_windupTimer > 0f) return;
+
+        StartDash();
+    }
+
+    /// <summary>
+    /// 예비 종료 → 실제 직선 돌진 시작. BeginCharge + Run 모션 + 거리 기준점 설정.
+    /// </summary>
+    private void StartDash()
+    {
+        _isWindingUp = false;
+        _startPosition = _stateMachine.transform.position;
+
+        _stateMachine.Movement.BeginCharge();
+        _stateMachine.Animator.PlayCharge();   // 전용 돌진 모션 (이전: PlayLocomotion + SetMoveSpeed(1f))
     }
 }

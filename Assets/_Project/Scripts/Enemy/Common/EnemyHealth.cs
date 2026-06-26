@@ -22,6 +22,9 @@ public class EnemyHealth : MonoBehaviour, IDamageable
     [SerializeField] private float _damageTextHeight = 1.8f;
 
     private int _currentHealth;
+    // === 가드(blocking) - 보스 반사 가드가 제어 ===
+    private bool _isBlocking;
+    private bool _blockedHit;   // 이번 가드 중 피격을 막은 적 있나 (가드 상태가 폴링)
 
     // === Public Properties ===
     public int CurrentHealth => _currentHealth;
@@ -56,6 +59,13 @@ public class EnemyHealth : MonoBehaviour, IDamageable
         if (IsDead) return;
         if (info.Amount <= 0) return;
 
+        // 가드 중: 데미지 무효 + 막은 사실 기록 (GuardState 가 다음 프레임에 반격)
+        if (_isBlocking)
+        {
+            _blockedHit = true;
+            return;
+        }
+
         _currentHealth -= info.Amount;
         if (_currentHealth < 0) _currentHealth = 0;
 
@@ -73,6 +83,21 @@ public class EnemyHealth : MonoBehaviour, IDamageable
         {
             OnDamaged?.Invoke();
         }
+    }
+
+    /// <summary>가드 on/off. 보스 GuardState 가 진입/이탈 시 호출. on 시 막힘 기록 초기화.</summary>
+    public void SetBlocking(bool blocking)
+    {
+        _isBlocking = blocking;
+        if (blocking) _blockedHit = false;
+    }
+
+    /// <summary>가드 중 피격을 막았으면 true 1회 반환(소비). GuardState 가 폴링해 반격 트리거.</summary>
+    public bool ConsumeBlockedHit()
+    {
+        if (!_blockedHit) return false;
+        _blockedHit = false;
+        return true;
     }
 
     /// <summary>

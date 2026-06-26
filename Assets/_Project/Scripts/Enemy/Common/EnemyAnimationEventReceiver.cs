@@ -62,4 +62,14 @@ public class EnemyAnimationEventReceiver : MonoBehaviour
     {
         _enemyAnimator?.OnDeathAnimationFinished();
     }
+
+    /// <summary>
+    /// 활 발사(릴리즈) 시점에 호출. 보스 전용 (BossAttacker.FireArrow).
+    /// 근접 PerformHit 과 분리 - 활 클립은 OnAttackHit 대신 이 이벤트를 쓴다.
+    /// 비보스 적은 _attacker 가 BossAttacker 가 아니므로 cast 가 null → 무시 (안전).
+    /// </summary>
+    public void OnBowRelease()
+    {
+        (_attacker as BossAttacker)?.FireArrow();
+    }
 }

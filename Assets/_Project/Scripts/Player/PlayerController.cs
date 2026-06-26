@@ -29,6 +29,7 @@ public class PlayerController : MonoBehaviour
     private bool _switchTargetRightRequested;
     private bool _interactRequested;
     private bool _toggleInventoryRequested;
+    private bool _cancelRequested;
 
     // === Public Read-Only Access ===
     public Vector2 MoveInput => _moveInput;
@@ -43,6 +44,19 @@ public class PlayerController : MonoBehaviour
     public bool SwitchTargetRightRequested => _switchTargetRightRequested;
     public bool InteractRequested => _interactRequested;
     public bool ToggleInventoryRequested => _toggleInventoryRequested;
+    public bool CancelRequested => _cancelRequested;
+
+    /// <summary>
+    /// Cancel(ESC) 입력을 1회성으로 소비한다. 눌려 있었으면 true 반환 + 플래그를 끈다.
+    /// 여러 소비자(상점/인벤토리/Pause)가 같은 ESC에 동시에 반응하지 않도록,
+    /// 먼저 처리한 쪽이 소비하면 나머지는 false 를 받는다 (Update 순서 무관).
+    /// </summary>
+    public bool ConsumeCancel()
+    {
+        if (!_cancelRequested) return false;
+        _cancelRequested = false;
+        return true;
+    }
 
     private void Awake()
     {
@@ -52,28 +66,26 @@ public class PlayerController : MonoBehaviour
         // Input Actions 인스턴스 생성
         _inputActions = new PlayerInputActions();
 
-        // 연속 입력 (Move, Look)
-        _inputActions.Player.Move.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
-        _inputActions.Player.Move.canceled += ctx => _moveInput = Vector2.zero;
+        // === PlayerPersistent (항상 켜짐: 이동 + 패널 조작) ===
+        _inputActions.PlayerPersistent.Move.performed += ctx => _moveInput = ctx.ReadValue<Vector2>();
+        _inputActions.PlayerPersistent.Move.canceled += ctx => _moveInput = Vector2.zero;
+        _inputActions.PlayerPersistent.Interact.performed += ctx => OnInteractPressed();
+        _inputActions.PlayerPersistent.ToggleInventory.performed += ctx => OnToggleInventoryPressed();
+        _inputActions.PlayerPersistent.Cancel.performed += ctx => OnCancelPressed();
 
-        _inputActions.Player.Look.performed += ctx => _lookInput = ctx.ReadValue<Vector2>();
-        _inputActions.Player.Look.canceled += ctx => _lookInput = Vector2.zero;
-
-        // 홀드 입력 (Sprint, Guard)
-        _inputActions.Player.Sprint.performed += ctx => _isSprintHeld = true;
-        _inputActions.Player.Sprint.canceled += ctx => _isSprintHeld = false;
-        _inputActions.Player.Guard.performed += ctx => _isGuardHeld = true;
-        _inputActions.Player.Guard.canceled += ctx => _isGuardHeld = false;
-
-        // 트리거 입력 (Dodge, Jump, Attack) - 누르는 순간 1번 발동
-        _inputActions.Player.Dodge.performed += ctx => OnDodgePressed();
-        _inputActions.Player.Jump.performed += ctx => OnJumpPressed();
-        _inputActions.Player.Attack.performed += ctx => OnAttackPressed();
-        _inputActions.Player.LockOn.performed += ctx => OnLockOnPressed();
-        _inputActions.Player.SwitchTargetLeft.performed += ctx => OnSwitchTargetLeftPressed();
-        _inputActions.Player.SwitchTargetRight.performed += ctx => OnSwitchTargetRightPressed();
-        _inputActions.Player.Interact.performed += ctx => OnInteractPressed();
-        _inputActions.Player.ToggleInventory.performed += ctx => OnToggleInventoryPressed();
+        // === PlayerGameplay (UI 열리면 꺼짐: 카메라/전투/타겟) ===
+        _inputActions.PlayerGameplay.Look.performed += ctx => _lookInput = ctx.ReadValue<Vector2>();
+        _inputActions.PlayerGameplay.Look.canceled += ctx => _lookInput = Vector2.zero;
+        _inputActions.PlayerGameplay.Sprint.performed += ctx => _isSprintHeld = true;
+        _inputActions.PlayerGameplay.Sprint.canceled += ctx => _isSprintHeld = false;
+        _inputActions.PlayerGameplay.Guard.performed += ctx => _isGuardHeld = true;
+        _inputActions.PlayerGameplay.Guard.canceled += ctx => _isGuardHeld = false;
+        _inputActions.PlayerGameplay.Dodge.performed += ctx => OnDodgePressed();
+        _inputActions.PlayerGameplay.Jump.performed += ctx => OnJumpPressed();
+        _inputActions.PlayerGameplay.Attack.performed += ctx => OnAttackPressed();
+        _inputActions.PlayerGameplay.LockOn.performed += ctx => OnLockOnPressed();
+        _inputActions.PlayerGameplay.SwitchTargetLeft.performed += ctx => OnSwitchTargetLeftPressed();
+        _inputActions.PlayerGameplay.SwitchTargetRight.performed += ctx => OnSwitchTargetRightPressed();
 
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
@@ -81,12 +93,16 @@ public class PlayerController : MonoBehaviour
 
     private void OnEnable()
     {
-        _inputActions.Player.Enable();
+        _inputActions.PlayerGameplay.Enable();
+        _inputActions.PlayerPersistent.Enable();
+        UIInputLock.OnChanged += HandleUILockChanged;
     }
 
     private void OnDisable()
     {
-        _inputActions.Player.Disable();
+        _inputActions.PlayerGameplay.Disable();
+        _inputActions.PlayerPersistent.Disable();
+        UIInputLock.OnChanged -= HandleUILockChanged;
     }
 
     private void LateUpdate()
@@ -101,6 +117,13 @@ public class PlayerController : MonoBehaviour
         _switchTargetRightRequested = false;
         _interactRequested = false;
         _toggleInventoryRequested = false;
+        _cancelRequested = false;
+    }
+
+    private void HandleUILockChanged(bool uiOpen)
+    {
+        if (uiOpen) _inputActions.PlayerGameplay.Disable();  // 카메라·전투 차단 (Persistent 유지 → WASD/닫기 OK)
+        else _inputActions.PlayerGameplay.Enable();
     }
 
     private void OnDodgePressed()
@@ -148,5 +171,10 @@ public class PlayerController : MonoBehaviour
     private void OnToggleInventoryPressed()
     {
         _toggleInventoryRequested = true;
+    }
+
+    private void OnCancelPressed()
+    {
+        _cancelRequested = true;
     }
 }

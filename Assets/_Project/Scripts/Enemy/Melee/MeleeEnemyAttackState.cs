@@ -15,29 +15,26 @@ using UnityEngine;
 public class MeleeEnemyAttackState : EnemyStateBase
 {
     private bool _isCoolingDown;
-    private float _cooldownTimer;
+   /* private float _cooldownTimer;*/
 
     public MeleeEnemyAttackState(EnemyStateMachineBase stateMachine) : base(stateMachine) { }
 
     public override void OnEnter()
     {
-        // 1. 이동 정지 (공격 도중 NavMeshAgent 영향 차단)
+        // 1. 이동 정지
         _stateMachine.Movement.StopMoving();
 
-        // 2. Target 향함 (1회 즉시 회전, 다크소울 표준)
-        if (_stateMachine.Target != null)
+        // 2. 쿨다운 준비됐으면 즉시 스윙, 아니면 쿨다운 대기로 시작
+        //    (전투 진입 시 쿨다운이 걸려 있으면 첫 스윙도 한 박자 늦음)
+        if (_stateMachine.IsAttackReady)
         {
-            _stateMachine.Movement.SetRotationImmediate(_stateMachine.Target.position);
+            BeginSwing();
         }
-
-        // 3. 공격 애니메이션 재생 (IsAttackFinished 플래그 리셋)
-        _stateMachine.Animator.PlayAttack();
-
-        // 4. Animator MoveSpeed 0 (Idle 자세로, Locomotion 영향 안 받음)
-        _stateMachine.Animator.SetMoveSpeed(0f);
-
-        // 공격 모드로 시작 (쿨다운 아님)
-        _isCoolingDown = false;
+        else
+        {
+            _isCoolingDown = true;
+            _stateMachine.Animator.SetMoveSpeed(0f);
+        }
     }
 
     public override void OnUpdate()
@@ -56,9 +53,9 @@ public class MeleeEnemyAttackState : EnemyStateBase
         // 공격 종료 감지 (Animation Event 가 IsAttackFinished = true 설정)
         if (_stateMachine.Animator.IsAttackFinished)
         {
-            // 공격 1회 끝 → 쿨다운 진입
+            // 공격 1회 끝 → 쿨다운 진입 (다음 공격 가능 시각 갱신)
+            _stateMachine.StartAttackCooldown();
             _isCoolingDown = true;
-            _cooldownTimer = _stateMachine.AttackCooldown;
 
             // Idle 자세 전환은 UpdateCooldown 이 매 프레임 PlayIdle 로 처리
             // (SetMoveSpeed 댐핑 때문에 1회 호출로는 Idle 도달 못 함)
@@ -76,15 +73,13 @@ public class MeleeEnemyAttackState : EnemyStateBase
     /// </summary>
     private void UpdateCooldown()
     {
-        // 대기 중 Idle 자세 (매 프레임 호출로 댐핑 수렴) + Target 조준
+        // 대기 중 Idle 자세 + Target 조준
         _stateMachine.Animator.PlayIdle();
         _stateMachine.Movement.LookAt(_stateMachine.Target.position);
 
-        _cooldownTimer -= Time.deltaTime;
-
         float distance = _stateMachine.Movement.DistanceTo(_stateMachine.Target.position);
 
-        // 멀어지면 추격 복귀 (추격 우선)
+        // 멀어지면 추격 복귀
         if (distance > _stateMachine.AttackRange)
         {
             _stateMachine.ToChase();
@@ -92,13 +87,21 @@ public class MeleeEnemyAttackState : EnemyStateBase
         }
 
         // 쿨다운 끝 + 가까움 → 재공격
-        if (_cooldownTimer <= 0f)
+        if (_stateMachine.IsAttackReady)
         {
-            // Target 향함 (1회 즉시 회전) + 새 공격
-            _stateMachine.Movement.SetRotationImmediate(_stateMachine.Target.position);
-            _stateMachine.Animator.PlayAttack();
-            _stateMachine.Animator.SetMoveSpeed(0f);
-            _isCoolingDown = false;
+            BeginSwing();
         }
+    }
+
+    /// <summary>공격 스윙 시작: Target 향해 1회 즉시 회전 + 공격 애니메이션 + 공격 모드.</summary>
+    private void BeginSwing()
+    {
+        if (_stateMachine.Target != null)
+        {
+            _stateMachine.Movement.SetRotationImmediate(_stateMachine.Target.position);
+        }
+        _stateMachine.Animator.PlayAttack();   // IsAttackFinished 리셋
+        _stateMachine.Animator.SetMoveSpeed(0f);
+        _isCoolingDown = false;
     }
 }

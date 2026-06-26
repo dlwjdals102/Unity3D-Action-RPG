@@ -131,15 +131,25 @@ public class EnemyMovement : MonoBehaviour
     }
 
     /// <summary>
-    /// 돌진 이동 (매 프레임). 지정 방향으로 직선 이동.
-    /// NavMesh 위에 위치를 유지하기 위해 NavMeshAgent.nextPosition 도 동기화.
+    /// 직선 돌진 이동 (고정 방향). NavMesh 경계(벽)에 막히면 그 직전에서 멈추고 false 반환.
+    /// NavMesh 위 위치 유지를 위해 NavMeshAgent.nextPosition 도 동기화.
     /// </summary>
-    public void ChargeMove(Vector3 direction, float speed)
+    /// <returns>정상 이동 = true, 벽(NavMesh 경계)에 막힘 = false</returns>
+    public bool ChargeMove(Vector3 direction, float speed)
     {
-        Vector3 delta = direction * speed * Time.deltaTime;
-        transform.position += delta;
-        // NavMeshAgent 내부 위치도 따라오게 (종료 후 경로 계산 정상화)
+        Vector3 nextPos = transform.position + direction * (speed * Time.deltaTime);
+
+        // 다음 위치까지 NavMesh 경계(벽)를 가로지르면 막힘 → 경계 직전까지만 이동
+        if (NavMesh.Raycast(transform.position, nextPos, out NavMeshHit hit, NavMesh.AllAreas))
+        {
+            transform.position = hit.position;
+            _agent.nextPosition = transform.position;
+            return false;
+        }
+
+        transform.position = nextPos;
         _agent.nextPosition = transform.position;
+        return true;
     }
 
     /// <summary>

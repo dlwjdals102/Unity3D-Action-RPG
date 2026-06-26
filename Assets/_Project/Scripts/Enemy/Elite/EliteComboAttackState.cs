@@ -26,7 +26,6 @@ public class EliteComboAttackState : EnemyStateBase
 
     // 콤보 세트 종료 후 쿨다운 (펀치 윈도우)
     private bool _isCoolingDown;
-    private float _cooldownTimer;
 
     public EliteComboAttackState(EnemyStateMachineBase stateMachine, EliteEnemyConfig config)
         : base(stateMachine)
@@ -36,7 +35,7 @@ public class EliteComboAttackState : EnemyStateBase
 
     public override void OnEnter()
     {
-        // Config 누락 시 콤보 불가 → 안전하게 추격 복귀 (폴백 상황)
+        // Config 누락 시 콤보 불가 → 추격 복귀
         if (_eliteConfig == null)
         {
             Debug.LogError("[EliteComboAttackState] EliteEnemyConfig is null. Returning to chase.");
@@ -44,7 +43,7 @@ public class EliteComboAttackState : EnemyStateBase
             return;
         }
 
-        // Attacker 캐싱 (첫 진입 시 1회)
+        // Attacker 캐싱 (첫 진입 1회)
         if (_attacker == null)
         {
             _attacker = _stateMachine.GetComponent<EliteEnemyAttacker>();
@@ -54,18 +53,15 @@ public class EliteComboAttackState : EnemyStateBase
         _stateMachine.Movement.StopMoving();
         _stateMachine.Animator.SetMoveSpeed(0f);
 
-        // 콤보 시작 시 1회 회전 (다크소울, 콤보 중에는 회전 안 함 → 회피 보상)
-        if (_stateMachine.Target != null)
+        // 쿨다운 준비됐으면 즉시 콤보, 아니면 쿨다운 대기로 시작 (전투 진입 비트)
+        if (_stateMachine.IsAttackReady)
         {
-            _stateMachine.Movement.SetRotationImmediate(_stateMachine.Target.position);
+            BeginCombo();
         }
-
-        // 콤보 모드로 시작 (쿨다운 아님)
-        _isCoolingDown = false;
-
-        // 1타부터 시작
-        _comboIndex = 0;
-        StartCurrentCombo();
+        else
+        {
+            _isCoolingDown = true;
+        }
     }
 
     public override void OnUpdate()
@@ -109,7 +105,7 @@ public class EliteComboAttackState : EnemyStateBase
         _attacker?.SetCurrentCombo(_comboIndex);
 
         // 공격 애니메이션 (IsAttackFinished 리셋)
-        _stateMachine.Animator.PlayAttack();
+        _stateMachine.Animator.PlayComboAttack(_comboIndex);
     }
 
     /// <summary>
@@ -119,7 +115,7 @@ public class EliteComboAttackState : EnemyStateBase
     private void EndCombo()
     {
         _isCoolingDown = true;
-        _cooldownTimer = _stateMachine.AttackCooldown;
+        _stateMachine.StartAttackCooldown();   // 다음 공격 가능 시각 갱신
 
         // 이동 정지. Idle 자세 전환은 UpdateCooldown 이 매 프레임 PlayIdle 로 처리
         _stateMachine.Movement.StopMoving();
@@ -139,28 +135,36 @@ public class EliteComboAttackState : EnemyStateBase
             return;
         }
 
-        // 대기 중 Idle 자세 (매 프레임 호출로 댐핑 수렴) + Target 조준
+        // 대기 중 Idle 자세 + Target 조준
         _stateMachine.Animator.PlayIdle();
         _stateMachine.Movement.LookAt(_stateMachine.Target.position);
 
-        _cooldownTimer -= Time.deltaTime;
-
         float distance = _stateMachine.Movement.DistanceTo(_stateMachine.Target.position);
 
-        // 멀어지면 쿨다운 무시하고 추격 (추격 우선)
+        // 멀어지면 추격 복귀
         if (distance > _stateMachine.AttackRange)
         {
             _stateMachine.ToChase();
             return;
         }
 
-        // 쿨다운 끝 + 가까움 → 새 콤보 (재조준 후 1타부터)
-        if (_cooldownTimer <= 0f)
+        // 쿨다운 끝 + 가까움 → 새 콤보 (1타부터)
+        if (_stateMachine.IsAttackReady)
+        {
+            BeginCombo();
+        }
+    }
+
+    /// <summary>콤보 세트 시작: Target 향해 1회 즉시 회전(다크소울) + 1타부터.</summary>
+    private void BeginCombo()
+    {
+        if (_stateMachine.Target != null)
         {
             _stateMachine.Movement.SetRotationImmediate(_stateMachine.Target.position);
-            _isCoolingDown = false;
-            _comboIndex = 0;
-            StartCurrentCombo();
         }
+
+        _isCoolingDown = false;
+        _comboIndex = 0;
+        StartCurrentCombo();
     }
 }

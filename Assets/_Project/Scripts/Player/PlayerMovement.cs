@@ -20,7 +20,7 @@ public class PlayerMovement : MonoBehaviour
     private PlayerController _controller;
     private PlayerAnimator _playerAnimator;
     private Transform _cameraTransform;
-    private Transform _groundCheck;
+    [SerializeField] private Transform _groundCheck;
 
     // === Movement Settings ===
     [Header("Movement")]
@@ -90,11 +90,15 @@ public class PlayerMovement : MonoBehaviour
         }
 
         // GroundCheck 자식 찾기
-        _groundCheck = transform.Find("GroundCheck");
-        if (_groundCheck == null)
-        {
-            Debug.LogError("[PlayerMovement] 'GroundCheck' child GameObject not found! Please add it under Player.");
-        }
+        if (_groundCheck == null) _groundCheck = transform.Find("GroundCheck");
+    }
+
+    private void Start()
+    {
+        // 상태머신의 첫 OnUpdate 전에 접지 상태를 확정한다.
+        // 안 그러면 _isGrounded 가 기본 false 인 채로 IdleState 가 읽어 Fall→Land(스폰 착지)가 발생.
+        CheckGrounded();
+        UpdateAnimatorGrounded();
     }
 
     private void Update()
@@ -234,7 +238,9 @@ public class PlayerMovement : MonoBehaviour
     {
         if (_groundCheck == null) return;
 
-        Gizmos.color = _isGrounded ? Color.green : Color.red;
+        // 에디트/런타임 모두 라이브 판정 (배치 즉시 접지 확인 가능)
+        bool grounded = Physics.CheckSphere(_groundCheck.position, _groundCheckRadius, _groundLayer);
+        Gizmos.color = grounded ? Color.green : Color.red;
         Gizmos.DrawWireSphere(_groundCheck.position, _groundCheckRadius);
     }
 }

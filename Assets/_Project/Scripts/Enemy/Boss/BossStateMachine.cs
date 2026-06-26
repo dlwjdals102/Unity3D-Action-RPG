@@ -1,238 +1,145 @@
 using UnityEngine;
-using System;
-using System.Collections.Generic;
 
 /// <summary>
-/// 보스의 상태머신. EnemyStateMachineBase 를 상속 (근접/원거리/엘리트와 형제).
-/// 
-/// [1] 기본 골격 단계: 공통 State 를 재사용해 "움직이고 때린다" 부터 확립.
-/// - PatrolState (EnemyPatrolState 재사용): 순찰
-/// - ChaseState (EnemyChaseState 재사용): 추격
-/// - AttackState (MeleeEnemyAttackState 재사용): 기본 근접 공격 1개
-/// - DeathState (EnemyDeathState 재사용): 사망
-/// 
-/// 추후 단계에서 보스 전용 확장:
-/// - [2] 패턴 State (콤보/돌진/범위 공격)
-/// - [3] 페이즈 시스템 (HP 구간별 패턴 변화, BossConfig.Phase2HealthThreshold)
-/// 
-/// BossConfig 권장 (높은 체력 + 페이즈 임계값). 없어도 베이스 EnemyConfig 로 동작.
+/// 거울 듀얼리스트 보스. 베이스 인프라(체력/이동/시야/쿨다운) 위에
+/// "중립 허브(Neutral)" 결정 구조를 얹는다. 안개 통과 전 Dormant 로 대기,
+/// BossGate.Activate() 로 기상. 행동(콤보/대시/활/패리)은 스포크로 단계 추가.
 /// </summary>
 public class BossStateMachine : EnemyStateMachineBase
 {
-    // === State Instances ===
-    public EnemyPatrolState PatrolState { get; private set; }
-    public BossChaseState ChaseState { get; private set; }
-    public BossAttackState AttackState { get; private set; }
-    public BossChargeState ChargeState { get; private set; }
-    public BossSlamState SlamState { get; private set; }
-    public BossCooldownState CooldownState { get; private set; }
+    // === 상태 (스포크는 단계별 추가) ===
+    public BossDormantState DormantState { get; private set; }
+    public BossNeutralState NeutralState { get; private set; }
+    public BossRecoveryState RecoveryState { get; private set; }
+    public BossBowState BowState { get; private set; }
+    public BossKickState KickState { get; private set; }
+    public BossSlashState SlashState { get; private set; }
+    public BossGuardState GuardState { get; private set; }
     public EnemyDeathState DeathState { get; private set; }
 
-    // === Phase ===
-    private int _currentPhase = 1;
+    // === 페이즈 ===
     private BossConfig _bossConfig;
-
-    /// <summary>현재 페이즈 (1 또는 2). 패턴 선택기가 참조.</summary>
+    private int _currentPhase = 1;
     public int CurrentPhase => _currentPhase;
+    // === 페이즈2 공격성 배수 (페이즈1 = 1.0, 페이즈2 = config 배수) ===
+    private float CooldownScale =>
+        _currentPhase >= 2 && _bossConfig != null ? _bossConfig.Phase2CooldownMultiplier : 1f;
+    public float SpeedScale =>
+        _currentPhase >= 2 && _bossConfig != null ? _bossConfig.Phase2SpeedMultiplier : 1f;
 
-    // === Attack Pattern Pool ===
-    /// <summary>
-    /// 보스 공격 패턴 정의. 선택기가 "현재 페이즈 + 거리" 로 필터 후 가중치 랜덤 선택.
-    /// 패턴 추가 = 이 리스트에 항목 추가 (데이터 주도 확장).
-    /// </summary>
-    private class AttackPattern
-    {
-        public string Name;
-        public int MinPhase;       // 이 페이즈 이상에서만 사용 (1 = 항상, 2 = 페이즈 2부터)
-        public float Weight;       // 선택 가중치 (클수록 자주)
-        public Action Execute;     // 실행 (해당 State 로 전환)
-    }
-
-    private List<AttackPattern> _patterns;
-    private float _nextAttackTime;  // 이 시각 이후 다음 공격 가능 (쿨다운)
-
-    // ========================================================================
-    // === Abstract Members 구현 ===
-    // ========================================================================
-
-    /// <summary>
-    /// 보스 상태 인스턴스 생성 (베이스 Awake 에서 호출).
-    /// [1] 단계는 공통 State 재사용. [2]에서 보스 전용 패턴으로 교체/추가.
-    /// </summary>
     protected override void CreateStates()
     {
-        // BossConfig 캐스팅 (돌진 등 보스 전용 패턴이 사용). null 이면 각 State 가 가드.
-        var bossConfig = _config as BossConfig;
-        if (bossConfig == null)
+        _bossConfig = _config as BossConfig;
+        if (_bossConfig == null)
         {
             Debug.LogError($"[BossStateMachine] requires BossConfig on {gameObject.name}! " +
                            $"Assign a BossConfig asset, not a plain EnemyConfig.");
         }
-        _bossConfig = bossConfig;  // 페이즈 전환 판정에 사용
 
-        PatrolState = new EnemyPatrolState(this);
-        ChaseState = new BossChaseState(this, bossConfig);
-        AttackState = new BossAttackState(this);
-        ChargeState = new BossChargeState(this, bossConfig);
-        SlamState = new BossSlamState(this, bossConfig);
-        CooldownState = new BossCooldownState(this, bossConfig);
+        DormantState = new BossDormantState(this);
+        NeutralState = new BossNeutralState(this, _bossConfig);  
+        RecoveryState = new BossRecoveryState(this);
+        BowState = new BossBowState(this, _bossConfig);        
+        KickState = new BossKickState(this, _bossConfig);
+        SlashState = new BossSlashState(this, _bossConfig);
+        GuardState = new BossGuardState(this, _bossConfig);
         DeathState = new EnemyDeathState(this);
-
-        BuildPatternPool(bossConfig);
     }
 
-    /// <summary>
-    /// 공격 패턴 풀 구성. 패턴별 페이즈/가중치/거리 조건을 데이터로 정의.
-    /// (페이즈 1: 기본 공격만 / 페이즈 2: 기본 + 돌진 + 내려찍기)
-    /// </summary>
-    private void BuildPatternPool(BossConfig config)
-    {
-        _patterns = new List<AttackPattern>();
+    /// <summary>안개 통과 전까지 휴면 상태로 시작 (순찰 안 함).</summary>
+    protected override EnemyStateBase GetInitialState() => DormantState;
 
-        // 패턴 선택은 "보스가 근접(AttackRange)에 도달한 시점"에만 일어나므로,
-        // 거리 필터(MinRange/MaxRange)는 사용하지 않는다. 모든 패턴이 근접에서 동등하게 후보.
-        // (거리로 패턴을 거르면 "특정 거리에서 한 패턴만 후보"가 되어 그 패턴만 반복되는
-        //  경계 문제가 생긴다. 근접 도달 시점으로 선택을 고정해 그 문제를 구조적으로 제거.)
+    protected override void HandleDeath() => ChangeState(DeathState);
 
-        // 기본 공격: 모든 페이즈
-        _patterns.Add(new AttackPattern
-        {
-            Name = "Attack",
-            MinPhase = 1,
-            Weight = 1f,
-            Execute = ToAttack
-        });
-
-        if (config != null)
-        {
-            // 돌진: 페이즈 2 (근접에서 발동 → 관통하며 거리 리셋)
-            _patterns.Add(new AttackPattern
-            {
-                Name = "Charge",
-                MinPhase = 2,
-                Weight = 1f,
-                Execute = ToCharge
-            });
-
-            // 내려찍기: 페이즈 2 (근접에서 발동 → 제자리 원형)
-            _patterns.Add(new AttackPattern
-            {
-                Name = "Slam",
-                MinPhase = 2,
-                Weight = 0.8f,
-                Execute = ToSlam
-            });
-        }
-    }
-
-    /// <summary>초기 진입 상태: 순찰.</summary>
-    protected override EnemyStateBase GetInitialState() => PatrolState;
-
-    /// <summary>사망 이벤트 구독자: 즉시 DeathState 전환.</summary>
-    protected override void HandleDeath()
-    {
-        ChangeState(DeathState);
-    }
-
-    /// <summary>
-    /// 피격 이벤트 구독자: Patrol 중 + 감지 범위 내 피격 시 ChaseState 전환.
-    /// (근접/원거리/엘리트와 동일 로직 - 미래 베이스 추출 후보)
-    /// </summary>
     protected override void HandleDamaged()
     {
-        // 페이즈 전환 체크 (피격마다 HP 비율 확인, 한 방향 전환)
         CheckPhaseTransition();
+        // 휴면 중 피격 시에도 기상 (안전망 - 보통은 게이트가 깨움)
+        if (CurrentState == DormantState) ChangeState(NeutralState);
+    }
 
-        if (CurrentState != PatrolState) return;
+    // === 외부(BossGate)가 호출: 휴면 → 전투 ===
+    [ContextMenu("Test")]
+    public void Activate()
+    {
+        if (CurrentState != DormantState) return;
+        StartCombatCooldowns();   // 전투 진입 쿨다운 (첫 수 즉발 방지)
+        ChangeState(NeutralState);
+    }
 
-        if (DistanceToTarget() <= DetectionRange)
-        {
-            ChangeState(ChaseState);
-        }
+    // === 전이 의도 ===
+    public void ToNeutral() => ChangeState(NeutralState);
+
+    /// <summary>행동 후 짧은 회복(빈틈) → Neutral. 회복 시간은 행동이 지정.</summary>
+    public void ToRecovery(float recoverySeconds)
+    {
+        RecoveryState.SetRecoveryDuration(recoverySeconds);
+        ChangeState(RecoveryState);
+    }
+
+    // === 활 쿨다운 (Time.time 기준, 일반 공격 쿨다운과 별개) ===
+    private float _nextBowTime;
+    public bool IsBowReady => Time.time >= _nextBowTime;
+    public void StartBowCooldown() =>
+        _nextBowTime = Time.time + (_bossConfig != null ? _bossConfig.BowCooldown : 0f) * CooldownScale;
+
+    public void ToBow() => ChangeState(BowState);
+    public void ToKick() => ChangeState(KickState);
+    public void ToSlash() => ChangeState(SlashState);
+
+    // === 가드 쿨다운 (Time.time 기준, 페이즈2에서 단축) ===
+    private float _nextGuardTime;
+    public bool IsGuardReady => Time.time >= _nextGuardTime;
+    public void StartGuardCooldown() =>
+        _nextGuardTime = Time.time + (_bossConfig != null ? _bossConfig.GuardCooldown : 0f) * CooldownScale;
+
+    public void ToGuard()
+    {
+        StartGuardCooldown();   // 가드 진입 시 쿨다운 - 너무 자주 막지 않게
+        ChangeState(GuardState);
     }
 
     /// <summary>
-    /// HP 비율이 페이즈 2 임계값 이하로 떨어지면 페이즈 2 로 전환 (1회, 되돌아가지 않음).
+    /// 근접 공격 후 호출. 페이즈 배수 적용한 쿨다운으로 _nextAttackTime 갱신.
+    /// 베이스 StartAttackCooldown 은 배수 미적용 - 보스 근접 패턴은 이걸 사용.
+    /// (_nextAttackTime 이 protected 라 직접 스케일 → Neutral 의 IsAttackReady 가 자동 반영)
     /// </summary>
+    public void StartScaledAttackCooldown() =>
+        _nextAttackTime = Time.time + AttackCooldown * CooldownScale;
+
+    /// <summary>전투 진입 시 공격 + 활 쿨다운 함께 건다 (어그로 직후 즉발 방지).</summary>
+    public override void StartCombatCooldowns()
+    {
+        base.StartCombatCooldowns();   // 공격 쿨다운
+        StartBowCooldown();            // 활 쿨다운
+        StartGuardCooldown();          // 가드 쿨다운
+    }
+
+    // === 추상 구현 (제네릭 흐름용 - 허브 보스에선 직접 안 쓰이나 라우팅) ===
+    public override void ToPatrol() => ChangeState(DormantState);
+    public override void ToChase() => ChangeState(NeutralState);
+    public override void ToAttack() => ChangeState(NeutralState);
+
+    // === virtual override ===
+    public override bool IsInCombat =>
+        CurrentState != DormantState && CurrentState != DeathState;
+
+    public override bool CanBeParried => false;  // 보스는 플레이어 패리에 경직 안 됨
+
+    // === 페이즈 전환 (HP 임계 이하 → 페이즈2, 1회) ===
     private void CheckPhaseTransition()
     {
-        if (_currentPhase >= 2) return;            // 이미 페이즈 2
+        if (_currentPhase >= 2) return;
         if (_bossConfig == null || _health == null) return;
 
         float maxHp = _health.MaxHealth;
         if (maxHp <= 0f) return;
 
-        float ratio = _health.CurrentHealth / maxHp;
-        if (ratio <= _bossConfig.Phase2HealthThreshold)
+        if (_health.CurrentHealth / maxHp <= _bossConfig.Phase2HealthThreshold)
         {
             _currentPhase = 2;
-            Debug.Log("[Boss] 페이즈 2 진입!");  // 임시 확인 (페이즈 연출은 [5] 인트로/폴리싱)
+            // 페이즈2 진입: 애니메이션 속도↑ (공격 스윙 날카롭게 + 광폭화)
+            Animator.SetSpeedMultiplier(_bossConfig.Phase2AnimSpeedMultiplier);
         }
     }
-
-    // ========================================================================
-    // === State Transition Intents 구현 ===
-    // ========================================================================
-
-    public override void ToPatrol() => ChangeState(PatrolState);
-    public override void ToChase() => ChangeState(ChaseState);
-    public override void ToAttack() => ChangeState(AttackState);
-    public override bool IsInCombat =>
-        CurrentState != null && CurrentState != PatrolState && CurrentState != DeathState;
-
-    /// <summary>돌진 상태로 전환. (임시 검증용으로 직접 호출, [2-3]에서 패턴 선택기가 호출)</summary>
-    public void ToCharge() => ChangeState(ChargeState);
-
-    /// <summary>내려찍기 상태로 전환. (임시 검증용으로 직접 호출, [2-3]에서 패턴 선택기가 호출)</summary>
-    public void ToSlam() => ChangeState(SlamState);
-
-    /// <summary>쿨다운 대기 상태로 전환. 모든 패턴이 끝나면 여기로 (둠칫 없는 쿨다운).</summary>
-    public void ToCooldown() => ChangeState(CooldownState);
-
-    /// <summary>
-    /// 현재 페이즈 + 거리에 맞는 패턴을 가중치 랜덤으로 골라 실행한다.
-    /// 후보가 없으면 false (BossChaseState 가 계속 추격).
-    /// </summary>
-    /// <param name="distance">플레이어와의 현재 거리</param>
-    /// <returns>패턴을 실행했으면 true</returns>
-    public bool TrySelectAndExecutePattern()
-    {
-        // 쿨다운 체크
-        if (Time.time < _nextAttackTime) return false;
-        if (_patterns == null) return false;
-
-        // 1. 현재 페이즈 조건 만족하는 후보 수집 (거리 필터 없음 - 근접 도달 시점에만 호출되므로)
-        float totalWeight = 0f;
-        var candidates = new List<AttackPattern>();
-        foreach (var p in _patterns)
-        {
-            if (_currentPhase < p.MinPhase) continue;
-            candidates.Add(p);
-            totalWeight += p.Weight;
-        }
-
-        if (candidates.Count == 0 || totalWeight <= 0f) return false;
-
-        // 2. 가중치 랜덤 선택
-        float roll = UnityEngine.Random.value * totalWeight;
-        AttackPattern chosen = candidates[candidates.Count - 1];  // 폴백 (부동소수 안전)
-        float accum = 0f;
-        foreach (var p in candidates)
-        {
-            accum += p.Weight;
-            if (roll <= accum)
-            {
-                chosen = p;
-                break;
-            }
-        }
-
-        // 3. 쿨다운 시작 + 실행
-        _nextAttackTime = Time.time + AttackCooldown;
-        chosen.Execute();
-        return true;
-    }
-
-    /// <summary>보스는 패리로 경직되지 않는다 (밸런스 - 가드는 가능).</summary>
-    public override bool CanBeParried => false;
 }

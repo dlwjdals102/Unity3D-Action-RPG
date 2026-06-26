@@ -34,10 +34,19 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
     [Tooltip("적이 추격할 대상 (보통 Player)")]
     [SerializeField] protected Transform _target;
 
+    [Header("Vision")]
+    [Tooltip("시야 차단 판정용 장애물(벽) 레이어")]
+    [SerializeField] protected LayerMask _obstacleLayer;
+    [Tooltip("시야 레이캐스트 눈높이 (바닥에서)")]
+    [SerializeField] protected float _eyeHeight = 1.5f;
+
     // === Patrol Points ===
     [Header("Patrol")]
     [Tooltip("순찰 경로 (순서대로 방문). 비어있으면 PatrolState 가 Idle 상태로 머무름")]
     [SerializeField] protected Transform[] _patrolPoints;
+
+    // 패트롤 포인트(자식)의 월드 좌표를 시작 시점에 스냅샷 → 이후 자식이 적을 따라가도 순찰 경로는 고정
+    private Vector3[] _patrolPositions;
 
     // === Component References (각 상태가 접근) ===
     public EnemyMovement Movement { get; private set; }
@@ -54,7 +63,10 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
     public Transform Target => _target;
 
     /// <summary>순찰 경로. PatrolState 가 활용.</summary>
-    public Transform[] PatrolPoints => _patrolPoints;
+    /*public Transform[] PatrolPoints => _patrolPoints;*/
+
+    /// <summary>순찰 경로(시작 시점 고정 월드 좌표). PatrolState 가 활용.</summary>
+    public Vector3[] PatrolPositions => _patrolPositions;
 
     /// <summary>공격 거리. ChaseState 와 AttackState 가 활용.</summary>
     public float AttackRange => _config != null ? _config.AttackRange : 0f;
@@ -64,6 +76,26 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
 
     /// <summary>공격 후 대기 시간(초). 모든 적 공통. AttackState 들이 활용.</summary>
     public float AttackCooldown => _config != null ? _config.AttackCooldown : 0f;
+
+    // === 공격 쿨다운 (중앙화, Time.time 기준) ===
+    // 보스가 쓰던 _nextAttackTime 패턴을 베이스로 끌어올려 모든 적 공통화.
+    // AttackState 들은 IsAttackReady 로 발동 여부를 판단하고,
+    // 공격 후 StartAttackCooldown() 으로 다음 가능 시각을 갱신한다.
+
+    /// <summary>다음 공격 가능 시각 (Time.time 기준). 상태 사이클을 넘어 유지.</summary>
+    protected float _nextAttackTime;
+
+    /// <summary>지금 공격 가능한가 (쿨다운 경과 여부).</summary>
+    public bool IsAttackReady => Time.time >= _nextAttackTime;
+
+    /// <summary>공격 직후 호출. AttackCooldown 만큼 다음 공격을 지연.</summary>
+    public void StartAttackCooldown() => _nextAttackTime = Time.time + AttackCooldown;
+
+    /// <summary>
+    /// 전투 진입 시(Patrol 이탈) 호출. 공격 쿨다운을 걸어 첫 공격을 한 박자 늦춘다.
+    /// 파생(Elite)은 override 로 추가 쿨다운(돌진)도 함께 건다.
+    /// </summary>
+    public virtual void StartCombatCooldowns() => StartAttackCooldown();
 
     // === Current State ===
     public EnemyStateBase CurrentState { get; private set; }
@@ -108,6 +140,9 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
         // 초기 위치/회전 기억 (화톳불 휴식 시 리스폰 복원용)
         _initialPosition = transform.position;
         _initialRotation = transform.rotation;
+
+        // 패트롤 자식 좌표를 지금 떠둔다 (_initialPosition 캡처와 같은 타이밍 가정)
+        CachePatrolPositions();
     }
 
     protected virtual void OnEnable()
@@ -270,17 +305,46 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
 
         Vector3 toTarget = _target.position - transform.position;
         float distance = toTarget.magnitude;
-
         if (distance > _config.DetectionRange) return false;
 
         toTarget.y = 0;
         Vector3 forward = transform.forward;
         forward.y = 0;
 
-        if (toTarget.sqrMagnitude < 0.01f) return true;
+        // 정면 각도 (너무 가까우면 각도 무시하고 통과)
+        if (toTarget.sqrMagnitude >= 0.01f)
+        {
+            float angle = Vector3.Angle(forward, toTarget);
+            if (angle >= _config.DetectionAngle / 2f) return false;
+        }
 
-        float angle = Vector3.Angle(forward, toTarget);
-        return angle < _config.DetectionAngle / 2f;
+        return HasLineOfSightToTarget();
+    }
+
+    /// <summary>
+    /// 적 ↔ 대상 사이에 장애물(벽)이 없는지 = 시야 확보 여부.
+    /// 거리/정면각도는 보지 않음. 이미 어그로된 적이 "벽에 가렸는지" 판정용
+    /// (정면 콘이 필요 없음 - 벽 돌 때 적이 옆을 봐도 LOS 만 맞으면 공격 가능).
+    /// </summary>
+    public bool HasLineOfSightToTarget()
+    {
+        if (_target == null) return false;
+        Vector3 eye = transform.position + Vector3.up * _eyeHeight;
+        Vector3 targetEye = _target.position + Vector3.up * _eyeHeight;
+        return !Physics.Linecast(eye, targetEye, _obstacleLayer);
+    }
+
+    /// <summary>
+    /// 이 적이 지금 대상을 공격할 수 있는가 (진입·유지 공통 술어).
+    /// 기본 = 사거리 안. 원거리 파생은 override 로 시야(LOS) 조건을 AND 한다.
+    ///
+    /// 핵심: Chase 진입 게이트와 Attack 유지 게이트가 같은 이 함수를 쓴다.
+    /// → "들어갔는데 조건 깨져도 안 나오는" 비대칭 구멍이 구조적으로 불가능.
+    /// </summary>
+    public virtual bool CanAttackTarget()
+    {
+        if (_target == null) return false;
+        return DistanceToTarget() < AttackRange;
     }
 
     /// <summary>
@@ -311,27 +375,50 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
         ChangeState(StunState);
     }
 
+    /// <summary>
+    /// _patrolPoints(자식 Transform)의 월드 좌표를 시작 시점에 캐싱한다.
+    /// 자식으로 두면 프리팹에 함께 저장돼 배치 시 자동 연결되지만 런타임엔 적을 따라 움직이므로,
+    /// 여기서 좌표만 고정해두고 PatrolState 가 이 좌표를 순찰한다. null 슬롯은 제외.
+    /// </summary>
+    private void CachePatrolPositions()
+    {
+        _patrolPositions = BuildPositionsFromPoints(_patrolPoints);
+    }
+
+    /// <summary>
+    /// Transform 배열의 월드 좌표를 Vector3[] 로 추린다 (null 슬롯 제외). 캐싱/기즈모 공용.
+    /// </summary>
+    private static Vector3[] BuildPositionsFromPoints(Transform[] points)
+    {
+        if (points == null) return new Vector3[0];
+
+        int count = 0;
+        for (int i = 0; i < points.Length; i++)
+            if (points[i] != null) count++;
+
+        Vector3[] result = new Vector3[count];
+        int idx = 0;
+        for (int i = 0; i < points.Length; i++)
+            if (points[i] != null) result[idx++] = points[i].position;
+        return result;
+    }
+
     // ========================================================================
     // === Editor Visualization (공통) ===
     // ========================================================================
     private void OnDrawGizmos()
     {
         // Patrol 경로 시각화 (노란 구체 + 선)
-        if (_patrolPoints != null && _patrolPoints.Length > 0)
+        // 플레이 중: 캐싱된 고정 좌표(실제 순찰 경로). 에디트 중: 자식 Transform 현재 좌표(작성용).
+        Vector3[] gizmoPoints = Application.isPlaying ? _patrolPositions : BuildPositionsFromPoints(_patrolPoints);
+        if (gizmoPoints != null && gizmoPoints.Length > 0)
         {
             Gizmos.color = Color.yellow;
-
-            for (int i = 0; i < _patrolPoints.Length; i++)
+            for (int i = 0; i < gizmoPoints.Length; i++)
             {
-                if (_patrolPoints[i] == null) continue;
-
-                Gizmos.DrawWireSphere(_patrolPoints[i].position, 0.5f);
-
-                int nextIndex = (i + 1) % _patrolPoints.Length;
-                if (_patrolPoints[nextIndex] != null)
-                {
-                    Gizmos.DrawLine(_patrolPoints[i].position, _patrolPoints[nextIndex].position);
-                }
+                Gizmos.DrawWireSphere(gizmoPoints[i], 0.5f);
+                int nextIndex = (i + 1) % gizmoPoints.Length;
+                Gizmos.DrawLine(gizmoPoints[i], gizmoPoints[nextIndex]);
             }
         }
 

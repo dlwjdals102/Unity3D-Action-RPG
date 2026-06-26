@@ -41,6 +41,9 @@ public class EliteEnemyConfig : EnemyConfig
     [Tooltip("돌진 종료/빗나감 후 경직 시간(초). 플레이어 반격 기회 (펀치 윈도우)")]
     [SerializeField] private float _chargeStunDuration = 1.5f;
 
+    [Tooltip("돌진 전 예비동작(Idle 정지) 시간(초)")]
+    [SerializeField] private float _chargeWindupDuration = 0.5f;
+
     // === Public Properties (읽기 전용) ===
     public int[] ComboDamages => _comboDamages;
     public float[] ComboContinueChance => _comboContinueChance;
@@ -52,6 +55,7 @@ public class EliteEnemyConfig : EnemyConfig
     public float ChargeCooldown => _chargeCooldown;
     public int ChargeDamage => _chargeDamage;
     public float ChargeStunDuration => _chargeStunDuration;
+    public float ChargeWindupDuration => _chargeWindupDuration;
 
     /// <summary>최대 콤보 타수 (ComboDamages 길이).</summary>
     public int MaxComboCount => _comboDamages != null ? _comboDamages.Length : 0;

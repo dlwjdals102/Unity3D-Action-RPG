@@ -9,16 +9,13 @@ using UnityEngine;
 /// - 중거리 + 쿨다운 OK: ToCharge (돌진)
 /// - 중거리 + 쿨다운 중 or 그 외: 부모가 추격/이동
 /// 
-/// 돌진 쿨다운은 Time.time 기준 _nextChargeTime 으로 관리 (상태 전환 사이클을 넘어 유지).
+/// 돌진 쿨다운은 EliteEnemyStateMachine 이 소유(IsChargeReady/StartChargeCooldown).
 /// EliteEnemyStateMachine 을 직접 참조 (엘리트 전용이라 정당, ToCharge 는 엘리트 전용 메서드).
 /// </summary>
 public class EliteChaseState : EnemyChaseState
 {
     private readonly EliteEnemyStateMachine _eliteSM;
     private readonly EliteEnemyConfig _eliteConfig;
-
-    // 이 시각 이후 돌진 가능 (Time.time 기준, 상태 사이클 넘어 유지)
-    private float _nextChargeTime;
 
     public EliteChaseState(EliteEnemyStateMachine stateMachine, EliteEnemyConfig config)
         : base(stateMachine)
@@ -47,12 +44,12 @@ public class EliteChaseState : EnemyChaseState
         // 돌진 발동 판단: 중거리 + 쿨다운 OK
         bool inChargeRange = distance >= _eliteConfig.ChargeMinDistance
                           && distance <= _eliteConfig.ChargeMaxDistance;
-        bool cooldownReady = Time.time >= _nextChargeTime;
+        bool cooldownReady = _eliteSM.IsChargeReady;
 
         if (inChargeRange && cooldownReady)
         {
             // 돌진 쿨다운 시작 (다음 돌진 가능 시각)
-            _nextChargeTime = Time.time + _eliteConfig.ChargeCooldown;
+            _eliteSM.StartChargeCooldown();
             _eliteSM.ToCharge();
             return;
         }

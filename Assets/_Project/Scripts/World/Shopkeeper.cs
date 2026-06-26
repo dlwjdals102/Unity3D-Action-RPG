@@ -44,6 +44,20 @@ public class Shopkeeper : MonoBehaviour
     {
         if (_playerInRange == null) return;
 
+        // ESC: 열려 있으면 닫기 (상점 열림 상태는 Shopkeeper 가 소유 → 여기서 닫아야 동기화)
+        /*if (_isOpen && _playerInRange.CancelRequested)
+        {
+            CloseShop();
+            return;
+        }*/
+
+        // 상점 열린 상태에서 ESC → 닫기 (소비형: Pause 등과 안 겹침)
+        if (_isOpen && _playerInRange.ConsumeCancel())
+        {
+            CloseShop();
+            return;
+        }
+
         if (_playerInRange.InteractRequested)
         {
             // F 토글: 열려있으면 닫고, 닫혀있으면 열기

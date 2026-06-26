@@ -63,6 +63,16 @@ public class RangedEnemyStateMachine : EnemyStateMachineBase
         }
     }
 
+    /// <summary>
+    /// 원거리는 사거리 안 + 시야 확보(LOS) 둘 다여야 공격 가능.
+    /// 벽에 가리면 false → Chase 가 진입 안 하고, Attack 이 유지 안 함(ToChase).
+    /// 베이스는 거리만 보지만(근접), 원거리는 여기서 LOS 를 AND 한다.
+    /// </summary>
+    public override bool CanAttackTarget()
+    {
+        return base.CanAttackTarget() && HasLineOfSightToTarget();
+    }
+
     // ========================================================================
     // === State Transition Intents 구현 ===
     // ToAttack 만 근접과 다름 (RangedAttackState 로).

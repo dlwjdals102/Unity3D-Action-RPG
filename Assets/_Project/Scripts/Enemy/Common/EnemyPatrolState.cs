@@ -37,7 +37,7 @@ public class EnemyPatrolState : EnemyStateBase
         }
 
         // 2. Waypoints 가 없으면 Idle 상태 (안전망)
-        Transform[] points = _stateMachine.PatrolPoints;
+        Vector3[] points = _stateMachine.PatrolPositions;
         if (points == null || points.Length == 0)
         {
             _stateMachine.Movement.StopMoving();
@@ -57,26 +57,26 @@ public class EnemyPatrolState : EnemyStateBase
     }
 
     /// <summary>
-    /// 현재 인덱스의 Waypoint 로 이동 시작.
-    /// Waypoint 가 null 이면 건너뛰고 다음 인덱스로 진행.
+    /// 순찰 이탈 = 전투 진입 (감지/피격으로 Chase 전환). 이 시점에 공격 쿨다운을 걸어
+    /// 어그로 직후 즉시 공격/돌진하는 것을 막는다 (첫 공격 한 박자 지연).
+    /// Patrol 은 오직 Chase(전투) 또는 Death 로만 이탈하므로 여기가 정확한 전투 진입점.
+    /// (사망 이탈에도 호출되나 무해 - 죽는 적의 쿨다운은 의미 없음.)
+    /// </summary>
+    public override void OnExit()
+    {
+        _stateMachine.StartCombatCooldowns();
+    }
+
+    /// <summary>
+    /// 현재 인덱스의 순찰 좌표로 이동 시작. (좌표는 Awake 에서 캐싱되어 null 이 없음)
     /// </summary>
     private void MoveToCurrentWaypoint()
     {
-        Transform[] points = _stateMachine.PatrolPoints;
+        Vector3[] points = _stateMachine.PatrolPositions;
         if (points == null || points.Length == 0) return;
 
-        // null Waypoint 건너뛰기 (Inspector 슬롯 일부 None 인 경우)
-        int safeguard = 0;
-        while (points[_currentIndex] == null && safeguard < points.Length)
-        {
-            _currentIndex = (_currentIndex + 1) % points.Length;
-            safeguard++;
-        }
-
-        if (points[_currentIndex] == null) return;  // 모두 null 인 경우
-
         _stateMachine.Movement.MoveTo(
-            points[_currentIndex].position,
+            points[_currentIndex],
             _stateMachine.Movement.WalkSpeed
         );
     }

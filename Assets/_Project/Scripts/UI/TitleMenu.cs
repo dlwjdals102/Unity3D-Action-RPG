@@ -12,7 +12,7 @@ using UnityEngine.SceneManagement;
 public class TitleMenu : MonoBehaviour
 {
     [Tooltip("게임 씬 이름 (Build Settings 등록 필요)")]
-    [SerializeField] private string _gameSceneName = "Scene_PlayerTest";
+    [SerializeField] private string _gameSceneName = "Scene_Game";
 
     [Tooltip("이어하기 버튼 (저장 없으면 비활성)")]
     [SerializeField] private Button _continueButton;

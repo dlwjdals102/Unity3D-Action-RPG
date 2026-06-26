@@ -18,10 +18,8 @@ public class DeathState : PlayerStateBase
         // 이동 정지 (사망 중 미끄러짐 방지)
         _stateMachine.Movement.RequestMovement(Vector3.zero);
 
-        // 사망 모션 (전용 클립은 폴리싱, 지금은 Locomotion 유지)
-        _stateMachine.Animator.PlayLocomotion();
-
-        // (폴리싱: 사망 애니메이션 트리거, "YOU DIED" 연출 등)
+        // 사망 모션, 부활 시 리스폰 시스템이 Idle→PlayLocomotion 으로 복귀.
+        _stateMachine.Animator.PlayDeath();
     }
 
     public override void OnUpdate()

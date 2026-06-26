@@ -23,6 +23,7 @@ public class PlayerAnimator : MonoBehaviour
     private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
     private static readonly int ComboIndexHash = Animator.StringToHash("ComboIndex");
     private static readonly int IsGuardingHash = Animator.StringToHash("IsGuarding");
+    private static readonly int DeathTriggerHash = Animator.StringToHash("Death");
 
     // === Animation Settings ===
     [Header("Animation")]
@@ -170,6 +171,17 @@ public class PlayerAnimator : MonoBehaviour
         ResetAllTriggers();
         _animator.SetInteger(ComboIndexHash, comboIndex);
         _animator.SetTrigger(AttackTriggerHash);
+    }
+
+    /// <summary>
+    /// 사망 애니메이션 재생 (Trigger). DeathState 의 OnEnter 에서 호출.
+    /// 크럼플 후 정지 자세 유지 (loop off). 부활 시 PlayLocomotion 이 Death→Locomotion 으로 복귀.
+    /// </summary>
+    public void PlayDeath()
+    {
+        if (_animator == null) return;
+        ResetAllTriggers();
+        _animator.SetTrigger(DeathTriggerHash);
     }
 
     // === Animation Event Callbacks ===

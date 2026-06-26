@@ -2,181 +2,147 @@ using UnityEngine;
 
 /// <summary>
 /// 보스의 공격 타격 처리. IEnemyAttacker 구현.
-/// 적 종류별 전용 Attacker 패턴 (Melee/Ranged/Elite 와 동일 구조).
-/// 
-/// - PerformHit: 기본 근접 공격 (Animation Event 가 호출). BossConfig.Damage 적용.
-/// - PerformChargeHit: 돌진 충돌 (BossChargeState 가 호출). 강한 단발 + 맞춤 여부 반환.
-/// 
-/// (Phase 2 범위 공격 Slam 은 [2-2]에서 추가 예정)
-/// 타격 메커니즘은 OverlapSphere + IDamageable.TakeDamage (공통 패턴).
+/// - PerformHit: 근접 콤보 타격 (Animation Event 가 호출). BossConfig.Damage 적용.
+/// (활 발사 FireArrow 는 Bow 스포크에서 추가)
 /// </summary>
 public class BossAttacker : MonoBehaviour, IEnemyAttacker
 {
     [Header("Config")]
-    [Tooltip("보스 수치 데이터 (기본/돌진 데미지 등)")]
     [SerializeField] private BossConfig _config;
 
-    [Header("Hit Detection (기본 공격)")]
+    [Header("Hit Detection (근접 공격)")]
     [Tooltip("타격 감지 영역 중심 (보스 앞쪽 자식 GameObject)")]
     [SerializeField] private Transform _hitOrigin;
 
-    [Tooltip("기본 공격 타격 반경 (m)")]
+    [Tooltip("근접 공격 타격 반경 (m)")]
     [SerializeField] private float _hitRadius = 1.5f;
 
     [Tooltip("공격 대상 Layer (보통 Player)")]
     [SerializeField] private LayerMask _targetLayer;
 
-    [Header("Charge Hit (돌진 충돌)")]
-    [Tooltip("돌진 충돌 판정의 정면 오프셋 (보스 중심에서 진행 방향)")]
-    [SerializeField] private float _chargeHitForwardOffset = 0.5f;
+    // 현재 근접 패턴의 데미지 (BossMeleeAttackStateBase 가 OnEnter 에 설정).
+    // 패턴(발차기/베기)마다 다르므로 PerformHit 직전에 주입받는다.
+    private int _currentAttackDamage;
 
-    [Tooltip("돌진 충돌 판정의 높이 오프셋 (발 기준, 가슴 높이로)")]
-    [SerializeField] private float _chargeHitHeightOffset = 1f;
+    [Header("Bow (활 발사)")]
+    [Tooltip("화살 생성 위치 (보스의 활/손 자식 GameObject)")]
+    [SerializeField] private Transform _fireOrigin;
 
-    [Tooltip("돌진 충돌 판정 반경 (m). 몸 충돌이라 넓게")]
-    [SerializeField] private float _chargeHitRadius = 1.5f;
+    // 발사 방향 고정 (드로우 시작 시점 캡처) - 원거리 적 조준락과 동일 철학
+    private Vector3 _lockedArrowDir;
+    private bool _hasLockedArrow;
 
     private void Awake()
     {
         if (_config == null)
-        {
             Debug.LogError($"[BossAttacker] BossConfig not assigned on {gameObject.name}!");
-        }
-
         if (_hitOrigin == null)
-        {
             Debug.LogError($"[BossAttacker] HitOrigin not assigned on {gameObject.name}!");
-        }
+
+        _currentAttackDamage = _config != null ? _config.Damage : 0;
     }
 
-    // ========================================================================
-    // === IEnemyAttacker 구현 ===
-    // ========================================================================
+    /// <summary>
+    /// 다음 PerformHit 이 적용할 데미지 설정. 근접 패턴 상태가 OnEnter 에 호출.
+    /// (Elite 의 SetCurrentCombo 와 동일 발상 - 패턴별 데미지)
+    /// </summary>
+    public void SetAttackDamage(int damage)
+    {
+        _currentAttackDamage = damage;
+    }
 
     /// <summary>
-    /// 기본 근접 공격 타격 (Animation Event 가 호출).
-    /// OverlapSphere 로 영역 내 대상 감지 + BossConfig.Damage 적용.
+    /// 근접 공격 타격 (Animation Event 가 호출). OverlapSphere + BossConfig.Damage.
     /// </summary>
     public void PerformHit()
     {
         if (_hitOrigin == null || _config == null) return;
 
         Collider[] hits = Physics.OverlapSphere(_hitOrigin.position, _hitRadius, _targetLayer);
-
         foreach (var hit in hits)
         {
             if (hit.TryGetComponent<IDamageable>(out var target))
             {
                 var info = new DamageInfo
                 {
-                    Amount = _config.Damage,
+                    Amount = _currentAttackDamage,
                     Source = gameObject,
                     HitPoint = hit.ClosestPoint(_hitOrigin.position)
                 };
-
                 target.TakeDamage(info);
             }
         }
     }
 
     // ========================================================================
-    // === 보스 전용 (돌진) ===
+    // === 활 (Bow) - BossBowState 가 구동 ===
     // ========================================================================
 
     /// <summary>
-    /// 돌진 충돌 타격. 보스 중심 기준 판정에 대상이 있으면 지정 데미지 적용.
-    /// 맞췄는지 여부를 반환 (BossChargeState 가 충돌 종료 판단에 사용).
+    /// 드로우 시작 시점에 발사 방향 1회 고정. BossBowState 가 호출.
+    /// 이후 FireArrow 가 이 방향으로 발사 → 윈드업 중 플레이어 회피 여지.
     /// </summary>
-    /// <returns>대상(Player)을 맞췄으면 true</returns>
-    public bool PerformChargeHit(int damage)
+    public void LockArrowAim(Transform target)
     {
-        Vector3 chargeHitPoint = GetChargeHitPoint();
+        if (target == null || _fireOrigin == null) { _hasLockedArrow = false; return; }
 
-        Collider[] hits = Physics.OverlapSphere(chargeHitPoint, _chargeHitRadius, _targetLayer);
+        Vector3 dir = target.position - _fireOrigin.position;
+        dir.y = 0;
+        if (dir.sqrMagnitude < 0.01f) { _hasLockedArrow = false; return; }
 
-        bool hitTarget = false;
-
-        foreach (var hit in hits)
-        {
-            if (hit.TryGetComponent<IDamageable>(out var target))
-            {
-                var info = new DamageInfo
-                {
-                    Amount = damage,
-                    Source = gameObject,
-                    HitPoint = hit.ClosestPoint(chargeHitPoint)
-                };
-
-                target.TakeDamage(info);
-                hitTarget = true;
-            }
-        }
-
-        return hitTarget;
+        _lockedArrowDir = dir.normalized;
+        _hasLockedArrow = true;
     }
 
     /// <summary>
-    /// 내려찍기 타격 (BossSlamState 가 착지 시점에 호출).
-    /// 보스 중심 원형 범위 (전방 오프셋 없음 - 제자리 강타, 돌진의 직선/전방과 다름).
-    /// 착지 1회 판정이라 맞춤 여부 반환 없이 데미지만 적용.
+    /// 고정된 방향으로 화살 1발 발사. BossBowState 가 윈드업 종료 시 호출.
+    /// 락이 없으면(미설정/너무 가까움) 발사 생략.
     /// </summary>
-    public void PerformSlam(int damage)
+    public void FireArrow()
     {
-        Vector3 slamCenter = GetSlamCenter();
-
-        Collider[] hits = Physics.OverlapSphere(slamCenter, _config != null ? _config.SlamRadius : 3.5f, _targetLayer);
-
-        foreach (var hit in hits)
+        if (!_hasLockedArrow || _fireOrigin == null || _config == null) return;
+        if (_config.BowProjectilePrefab == null)
         {
-            if (hit.TryGetComponent<IDamageable>(out var target))
-            {
-                var info = new DamageInfo
-                {
-                    Amount = damage,
-                    Source = gameObject,
-                    HitPoint = hit.ClosestPoint(slamCenter)
-                };
-
-                target.TakeDamage(info);
-            }
+            Debug.LogError($"[BossAttacker] BowProjectilePrefab not set in BossConfig on {gameObject.name}!");
+            return;
         }
-    }
 
+        GameObject projObj = Instantiate(
+            _config.BowProjectilePrefab,
+            _fireOrigin.position,
+            Quaternion.LookRotation(_lockedArrowDir)
+        );
 
-    // ========================================================================
-    // === Helper + Editor Visualization ===
-    // ========================================================================
+        if (projObj.TryGetComponent<Projectile>(out var projectile))
+        {
+            projectile.Initialize(
+                _config.BowProjectileSpeed,
+                _config.BowDamage,
+                _targetLayer,      // 근접과 동일 (플레이어)
+                gameObject         // owner
+            );
+        }
+        else
+        {
+            Debug.LogError($"[BossAttacker] BowProjectilePrefab has no Projectile component on {gameObject.name}!");
+            Destroy(projObj);
+        }
 
-    /// <summary>돌진 충돌 판정 중심점. 보스 중심 + 정면/높이 오프셋. PerformChargeHit 과 Gizmo 공유.</summary>
-    private Vector3 GetChargeHitPoint()
-    {
-        return transform.position
-             + transform.forward * _chargeHitForwardOffset
-             + Vector3.up * _chargeHitHeightOffset;
-    }
-
-    /// <summary>내려찍기 판정 중심점. 보스 발밑 중심 (전방 오프셋 없음 - 제자리 원형).</summary>
-    private Vector3 GetSlamCenter()
-    {
-        return transform.position;
+        _hasLockedArrow = false;  // 1발 소비
     }
 
     private void OnDrawGizmosSelected()
     {
-        // 기본 공격 범위 (빨강)
         if (_hitOrigin != null)
         {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(_hitOrigin.position, _hitRadius);
         }
 
-        // 돌진 충돌 범위 (주황)
-        Gizmos.color = new Color(1f, 0.5f, 0f);
-        Gizmos.DrawWireSphere(GetChargeHitPoint(), _chargeHitRadius);
-
-        // 내려찍기 범위 (노랑) - 보스 중심 원형
-        Gizmos.color = Color.yellow;
-        float slamR = _config != null ? _config.SlamRadius : 3.5f;
-        Gizmos.DrawWireSphere(GetSlamCenter(), slamR);
+        if (_fireOrigin != null)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(_fireOrigin.position, 0.15f);
+        }
     }
 }

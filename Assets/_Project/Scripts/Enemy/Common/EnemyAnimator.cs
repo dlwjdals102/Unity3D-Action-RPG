@@ -23,6 +23,10 @@ public class EnemyAnimator : MonoBehaviour
     private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
     private static readonly int DeathTriggerHash = Animator.StringToHash("Death");
     private static readonly int IsStunnedHash = Animator.StringToHash("IsStunned");
+    private static readonly int ComboIndexHash = Animator.StringToHash("ComboIndex");
+    private static readonly int ChargeTriggerHash = Animator.StringToHash("Charge");
+    private static readonly int BowTriggerHash = Animator.StringToHash("Bow");
+    private static readonly int GuardTriggerHash = Animator.StringToHash("Guard");
 
     [Header("Animation Settings")]
     [Tooltip("MoveSpeed 댐핑 시간 (부드러운 전환)")]
@@ -61,6 +65,16 @@ public class EnemyAnimator : MonoBehaviour
     {
         if (_animator == null) return;
         _animator.SetFloat(MoveSpeedHash, normalizedSpeed, _moveSpeedDampTime, Time.deltaTime);
+    }
+
+    /// <summary>
+    /// Animator 전체 재생 속도 배수. 1 = 기본, >1 = 빠름(페이즈2 광폭화).
+    /// 이동·공격·대기 모든 클립에 적용된다. 보스 페이즈 전환이 호출.
+    /// </summary>
+    public void SetSpeedMultiplier(float multiplier)
+    {
+        if (_animator == null) return;
+        _animator.speed = multiplier;
     }
 
     /// <summary>경직(스턴) on/off. 경직 상태 동안 비틀거리는 루프 재생.</summary>
@@ -110,6 +124,57 @@ public class EnemyAnimator : MonoBehaviour
         if (_animator == null) return;
         ResetAllTriggers();
         _isAttackFinished = false;
+        _animator.SetTrigger(AttackTriggerHash);
+    }
+
+    /// <summary>
+    /// 돌진 모션 발동 (Elite 전용). 전용 Charge 상태로 전환.
+    /// 이동·충돌·종료는 EliteChargeState 가 코드로 제어하므로 이건 *시각*만 담당(이벤트 불필요).
+    /// </summary>
+    public void PlayCharge()
+    {
+        if (_animator == null) return;
+        ResetAllTriggers();
+        _animator.SetTrigger(ChargeTriggerHash);
+    }
+
+    /// <summary>
+    /// 활 드로우 모션 발동 (보스 전용). 전용 Bow 트리거로 드로우 클립 재생.
+    /// 발사는 클립의 OnBowRelease 이벤트가, 종료는 OnAttackAnimationEnd 이벤트가 처리.
+    /// (PlayAttack 과 동일하게 _isAttackFinished 리셋 → 상태가 IsAttackFinished 로 종료 감지)
+    /// </summary>
+    public void PlayBow()
+    {
+        if (_animator == null) return;
+        ResetAllTriggers();
+        _isAttackFinished = false;
+        _animator.SetTrigger(BowTriggerHash);
+    }
+
+    /// <summary>
+    /// 가드(막기) 자세 발동 (보스 전용). 전용 Guard 트리거로 가드 스탠스 클립 재생.
+    /// 지속·반격은 BossGuardState 가 코드로 제어하므로 이건 *시각*만 담당(이벤트 불필요).
+    /// </summary>
+    public void PlayGuard()
+    {
+        if (_animator == null) return;
+        ResetAllTriggers();
+        _isAttackFinished = false;
+        _animator.SetTrigger(GuardTriggerHash);
+    }
+
+    /// <summary>
+    /// 콤보 공격 발동 (Elite 전용). ComboIndex 로 N타 클립을 선택해 재생.
+    /// PlayAttack 과 동일하게 _isAttackFinished 리셋 + Attack 트리거를 쓰되,
+    /// 먼저 ComboIndex 를 세팅해 Animator 가 해당 타 클립으로 분기하게 한다.
+    /// (ComboIndex 파라미터는 Elite Controller 에만 존재 - 다른 적은 PlayAttack 사용)
+    /// </summary>
+    public void PlayComboAttack(int comboIndex)
+    {
+        if (_animator == null) return;
+        ResetAllTriggers();
+        _isAttackFinished = false;
+        _animator.SetInteger(ComboIndexHash, comboIndex);  // 트리거 전에 인덱스 먼저
         _animator.SetTrigger(AttackTriggerHash);
     }
 

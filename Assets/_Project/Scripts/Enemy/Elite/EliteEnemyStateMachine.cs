@@ -90,4 +90,32 @@ public class EliteEnemyStateMachine : EnemyStateMachineBase
     /// EliteChaseState 가 중거리 + 쿨다운 OK 일 때 호출.
     /// </summary>
     public void ToCharge() => ChangeState(ChargeState);
+
+    // ========================================================================
+    // === 돌진 쿨다운 (중앙화, Time.time 기준) ===
+    // 일반 공격 쿨다운(_nextAttackTime, 베이스)과 별개의 타이머.
+    // 보스가 _nextAttackTime 을 머신에 두는 것과 동일하게, 돌진 쿨다운도 머신이 소유.
+    // EliteChaseState 가 발동 판정에 IsChargeReady 를 사용 (7번에서 연결).
+    // ========================================================================
+
+    private float _nextChargeTime;
+
+    /// <summary>EliteEnemyConfig 의 ChargeCooldown (config 누락 시 0).</summary>
+    private float ChargeCooldown => (_config as EliteEnemyConfig)?.ChargeCooldown ?? 0f;
+
+    /// <summary>지금 돌진 가능한가 (돌진 쿨다운 경과 여부).</summary>
+    public bool IsChargeReady => Time.time >= _nextChargeTime;
+
+    /// <summary>돌진 시작 직후 호출. ChargeCooldown 만큼 다음 돌진을 지연.</summary>
+    public void StartChargeCooldown() => _nextChargeTime = Time.time + ChargeCooldown;
+
+    /// <summary>
+    /// 전투 진입 시(Patrol 이탈) 공격 + 돌진 쿨다운을 함께 건다.
+    /// 베이스(공격 쿨다운) + 돌진 쿨다운 → 어그로 직후 즉시 돌진 방지.
+    /// </summary>
+    public override void StartCombatCooldowns()
+    {
+        base.StartCombatCooldowns();   // 공격 쿨다운 (_nextAttackTime)
+        StartChargeCooldown();         // 돌진 쿨다운 (_nextChargeTime)
+    }
 }

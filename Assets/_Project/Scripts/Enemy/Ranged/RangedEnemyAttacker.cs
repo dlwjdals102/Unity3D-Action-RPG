@@ -26,6 +26,12 @@ public class RangedEnemyAttacker : MonoBehaviour, IEnemyAttacker
     [Tooltip("조준할 대상 (보통 Player). 발사 방향 계산에 사용")]
     [SerializeField] private Transform _target;
 
+    // === 발사 방향 고정 (발사 시작 시점 캡처) ===
+    // FireOnce 시점에 LockAim 으로 방향 확정 → PerformHit(릴리즈)이 그 방향으로 발사.
+    // EliteChargeState 의 _chargeDirection 과 동일 철학 (직선, 회피 보상).
+    private Vector3 _lockedDirection;
+    private bool _hasLockedAim;
+
     private void Awake()
     {
         if (_config == null)
@@ -61,12 +67,19 @@ public class RangedEnemyAttacker : MonoBehaviour, IEnemyAttacker
             return;
         }
 
-        // 1. 발사 방향 계산 (Target 조준, 수평만)
-        Vector3 direction = _target.position - _fireOrigin.position;
-        direction.y = 0;  // 수평 발사 (높이 무시)
-
-        if (direction.sqrMagnitude < 0.01f) return;  // 너무 가까움 (방향 계산 불가)
-        direction.Normalize();
+        // 1. 락된 방향이 있으면 그걸 사용(발사 시작 시점 고정), 없으면 현재 위치로 live 계산(폴백)
+        Vector3 direction;
+        if (_hasLockedAim)
+        {
+            direction = _lockedDirection;  // 이미 수평·정규화됨
+        }
+        else
+        {
+            direction = _target.position - _fireOrigin.position;
+            direction.y = 0;
+            if (direction.sqrMagnitude < 0.01f) return;
+            direction.Normalize();
+        }
 
         // 2. 발사체 생성 (방향 바라보도록 회전)
         GameObject projObj = Instantiate(
@@ -90,6 +103,24 @@ public class RangedEnemyAttacker : MonoBehaviour, IEnemyAttacker
             Debug.LogError($"[RangedEnemyAttacker] ProjectilePrefab has no Projectile component on {gameObject.name}!");
             Destroy(projObj);
         }
+    }
+
+    /// <summary>
+    /// 발사 시작 시점에 발사 방향을 1회 고정. RangedEnemyAttackState.FireOnce 가 호출.
+    /// 이후 PerformHit(릴리즈)이 이 고정 방향을 쓴다 → 윈드업 중 플레이어가 옆으로 피할 여지.
+    /// 너무 가까워 방향 계산 불가 시 락 해제(PerformHit 의 live 폴백).
+    /// </summary>
+    public void LockAim()
+    {
+        if (_target == null || _fireOrigin == null) { _hasLockedAim = false; return; }
+
+        Vector3 dir = _target.position - _fireOrigin.position;
+        dir.y = 0;  // 수평
+
+        if (dir.sqrMagnitude < 0.01f) { _hasLockedAim = false; return; }
+
+        _lockedDirection = dir.normalized;
+        _hasLockedAim = true;
     }
 
     // ========================================================================
