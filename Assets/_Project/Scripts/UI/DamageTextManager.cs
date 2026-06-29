@@ -60,6 +60,13 @@ public class DamageTextManager : MonoBehaviour
         text.Initialize(damage, worldPosition);
     }
 
+    /// <summary>문자열 텍스트(Guard/Parry 등)를 지정 색으로 띄운다.</summary>
+    public void SpawnText(string text, Vector3 worldPosition, Color color)
+    {
+        DamageText text2 = GetFromPool();
+        text2.Initialize(text, color, worldPosition);
+    }
+
     /// <summary>
     /// 데미지 텍스트가 수명 종료 시 호출. 풀에 반환.
     /// </summary>

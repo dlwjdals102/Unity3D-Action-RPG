@@ -109,6 +109,12 @@ public abstract class EnemyStateMachineBase : MonoBehaviour
     /// </summary>
     public virtual bool IsInCombat => false;
 
+    /// <summary>
+    /// 휴식(RespawnAll) 시 부활 대상인가. 일반 적은 true.
+    /// 보스는 override 로 false - 소울 규칙상 한 번 죽으면 휴식으로 부활 안 함.
+    /// </summary>
+    public virtual bool ParticipatesInRespawn => true;
+
     // ========================================================================
     // === Unity Lifecycle (파생이 override 가능, base 호출 필수) ===
     // ========================================================================

@@ -24,6 +24,7 @@ public class PlayerAnimator : MonoBehaviour
     private static readonly int ComboIndexHash = Animator.StringToHash("ComboIndex");
     private static readonly int IsGuardingHash = Animator.StringToHash("IsGuarding");
     private static readonly int DeathTriggerHash = Animator.StringToHash("Death");
+    private static readonly int KickTriggerHash = Animator.StringToHash("Kick");
 
     // === Animation Settings ===
     [Header("Animation")]
@@ -171,6 +172,16 @@ public class PlayerAnimator : MonoBehaviour
         ResetAllTriggers();
         _animator.SetInteger(ComboIndexHash, comboIndex);
         _animator.SetTrigger(AttackTriggerHash);
+    }
+
+    public void PlayKick()
+    {
+        _comboWindowOpen = false;
+        _attackFinished = false;
+
+        if (_animator == null) return;
+        ResetAllTriggers();
+        _animator.SetTrigger(KickTriggerHash);
     }
 
     /// <summary>

@@ -43,7 +43,28 @@ public class DamageText : MonoBehaviour
         _baseColorCaptured = true;
     }
 
-    /// <summary>
+    public void Initialize(int damage, Vector3 worldPosition)
+        => Begin(damage.ToString(), _baseColor, worldPosition);
+
+    /// <summary>문자열+색 버전 (Guard/Parry 등). 떠오름·페이드는 숫자 버전과 동일.</summary>
+    public void Initialize(string text, Color color, Vector3 worldPosition)
+        => Begin(text, color, worldPosition);
+
+    private void Begin(string text, Color color, Vector3 worldPosition)
+    {
+        transform.position = worldPosition;
+        _startPosition = worldPosition;
+
+        _text.text = text;
+        color.a = 1f;             // 시작은 불투명 (재사용 시 이전 페이드 알파 잔재 제거)
+        _startColor = color;
+        _text.color = color;
+
+        _elapsed = 0f;
+        gameObject.SetActive(true);
+    }
+
+    /*/// <summary>
     /// 데미지 텍스트 초기화. DamageTextManager 가 풀에서 가져온 후 호출.
     /// </summary>
     public void Initialize(int damage, Vector3 worldPosition)
@@ -60,7 +81,7 @@ public class DamageText : MonoBehaviour
         _elapsed = 0f;
 
         gameObject.SetActive(true);
-    }
+    }*/
 
     private void Update()
     {

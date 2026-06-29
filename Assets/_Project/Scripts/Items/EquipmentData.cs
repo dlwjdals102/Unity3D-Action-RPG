@@ -23,8 +23,11 @@ public class EquipmentData : ItemData
     [Tooltip("착용 부위")]
     [SerializeField] private EquipmentSlot _slot;
 
-    [Tooltip("공격력 보정 (착용 시 합산)")]
+    [Tooltip("공격력 보정 (착용 시 합산). 무기는 WeaponDamage를 쓰므로 0 권장 - 방어구/장신구용")]
     [SerializeField] private int _attackBonus = 0;
+
+    [Tooltip("무기 기본 데미지 (무기 슬롯 전용. 콤보 데미지의 기준값)")]
+    [SerializeField] private int _weaponDamage = 0;
 
     [Tooltip("방어력 보정 (착용 시 합산)")]
     [SerializeField] private int _defenseBonus = 0;
@@ -32,5 +35,6 @@ public class EquipmentData : ItemData
     // === Public Properties ===
     public EquipmentSlot Slot => _slot;
     public int AttackBonus => _attackBonus;
+    public int WeaponDamage => _weaponDamage;
     public int DefenseBonus => _defenseBonus;
 }

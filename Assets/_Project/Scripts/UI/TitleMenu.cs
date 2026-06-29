@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 /// - 새 게임: 저장 삭제 후 게임 씬 로드 (처음부터)
 /// - 이어하기: 게임 씬 로드 (SaveCoordinator 가 시작 시 자동 로드)
 /// - 저장 파일이 없으면 이어하기 버튼 비활성.
-/// 메뉴는 Unity 표준 Button 사용 (게임 내 슬롯 UI 와 달리 메뉴는 Button 이 적합).
+/// 메뉴는 Unity 표준 Button 사용.
 /// </summary>
 public class TitleMenu : MonoBehaviour
 {
@@ -42,7 +42,6 @@ public class TitleMenu : MonoBehaviour
     /// <summary>게임 종료. (버튼 OnClick 연결)</summary>
     public void QuitGame()
     {
-        Debug.Log("[Title] 게임 종료");
         Application.Quit();  // 에디터에선 동작 안 함 (빌드에서)
     }
 }

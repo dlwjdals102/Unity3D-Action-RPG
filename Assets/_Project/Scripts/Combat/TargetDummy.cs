@@ -2,7 +2,7 @@ using UnityEngine;
 
 /// <summary>
 /// 테스트용 적. IDamageable 구현.
-/// 공격 시스템 검증 목적. 본격 적 AI 는 Week 6 이후 구현 예정.
+/// 공격 시스템 검증 목적.
 /// 단일 책임: 데미지 받기 + 체력 추적.
 /// </summary>
 public class TargetDummy : MonoBehaviour, IDamageable
@@ -42,10 +42,6 @@ public class TargetDummy : MonoBehaviour, IDamageable
         Vector3 textPosition = transform.position + Vector3.up * _damageTextHeight;
         DamageTextManager.Instance?.Spawn(info.Amount, textPosition);
 
-        if (IsDead)
-        {
-            Debug.Log("[TargetDummy] Dead!");
-            gameObject.SetActive(false);
-        }
+        if (IsDead) gameObject.SetActive(false);
     }
 }

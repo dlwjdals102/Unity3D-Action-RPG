@@ -32,7 +32,6 @@ public class LockOnCameraController : MonoBehaviour
 
     private Transform _lastTarget;
     private CinemachineOrbitalFollow _normalOrbital;
-    //private CinemachineInputAxisController _normalInputController;
 
     private void Awake()
     {
@@ -46,7 +45,6 @@ public class LockOnCameraController : MonoBehaviour
         if (_normalCamera != null)
         {
             _normalOrbital = _normalCamera.GetComponent<CinemachineOrbitalFollow>();
-            //_normalInputController = _normalCamera.GetComponent<CinemachineInputAxisController>();
         }
     }
 
@@ -95,9 +93,7 @@ public class LockOnCameraController : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 적을 Target Group 에 추가 (이미 있으면 무시). 카메라가 플레이어와 함께 담는다.
-    /// </summary>
+    /// <summary> 적을 Target Group 에 추가 (이미 있으면 무시). 카메라가 플레이어와 함께 담는다. </summary>
     private void AddTargetToGroup(Transform target)
     {
         if (_targetGroup == null || target == null) return;
@@ -105,9 +101,7 @@ public class LockOnCameraController : MonoBehaviour
         _targetGroup.AddMember(target, 1f, 1f);  // weight 1, radius 1
     }
 
-    /// <summary>
-    /// 적을 Target Group 에서 제거 (없으면 무시).
-    /// </summary>
+    /// <summary> 적을 Target Group 에서 제거 (없으면 무시). </summary>
     private void RemoveTargetFromGroup(Transform target)
     {
         if (_targetGroup == null || target == null) return;

@@ -8,6 +8,7 @@ using UnityEngine;
 public class PlayerAttacker : MonoBehaviour
 {
     private PlayerStats _stats;
+    private EquipmentManager _equipment;
 
     [Header("Hit Detection")]
     [SerializeField] private Transform _hitOrigin;
@@ -15,10 +16,14 @@ public class PlayerAttacker : MonoBehaviour
     [SerializeField] private LayerMask _enemyLayer;
 
     [Header("Combo Damage")]
-    [SerializeField] private int[] _comboDamages = { 10, 15, 25 };
+    [Tooltip("콤보 단계별 데미지 배율 (무기 데미지 × 배율). 1타, 2타, 3타")]
+    [SerializeField] private float[] _comboMultipliers = { 1.0f, 1.3f }; /*1.8f };*/
+
+    [Tooltip("맨손 발차기 데미지")]
+    [SerializeField] private int _kickDamage = 8;
 
     [Header("Combo Stamina Cost")]
-    [SerializeField] private float[] _comboStaminaCosts = { 15f, 20f, 25f };
+    [SerializeField] private float[] _comboStaminaCosts = { 15f, 20f }; /*25f };*/
 
     private int _currentDamage;
 
@@ -30,6 +35,7 @@ public class PlayerAttacker : MonoBehaviour
         }
 
         _stats = GetComponent<PlayerStats>();
+        _equipment = GetComponent<EquipmentManager>();
     }
 
     // ========================================================================
@@ -42,13 +48,28 @@ public class PlayerAttacker : MonoBehaviour
     /// </summary>
     public void SetCurrentCombo(int comboIndex)
     {
-        if (comboIndex < 0 || comboIndex >= _comboDamages.Length)
+        if (comboIndex < 0 || comboIndex >= _comboMultipliers.Length)
         {
             Debug.LogWarning($"[PlayerAttacker] Invalid combo index: {comboIndex}");
             return;
         }
 
-        _currentDamage = _comboDamages[comboIndex];
+        int weaponDamage = GetEquippedWeaponDamage();
+        _currentDamage = Mathf.RoundToInt(weaponDamage * _comboMultipliers[comboIndex]);
+    }
+
+    /// <summary>현재 장착 무기의 기본 데미지. 무기 없으면 0.</summary>
+    private int GetEquippedWeaponDamage()
+    {
+        if (_equipment == null) return 0;
+        var weapon = _equipment.GetEquipped(EquipmentSlot.Weapon);
+        return weapon != null ? weapon.WeaponDamage : 0;
+    }
+
+    /// <summary>맨손 발차기 데미지 설정. PerformHit 가 _currentDamage 를 사용.</summary>
+    public void SetUnarmedAttack()
+    {
+        _currentDamage = _kickDamage;
     }
 
     /// <summary>
@@ -76,33 +97,48 @@ public class PlayerAttacker : MonoBehaviour
 
         Collider[] hits = Physics.OverlapSphere(_hitOrigin.position, _hitRadius, _enemyLayer);
 
+        bool bigHit = false;
         bool hitAny = false;
+        const int shakeThreshold = 25;   // 이 이상 데미지면 연출 (히트스톱+셰이크)
 
         foreach (var hit in hits)
         {
             if (hit.TryGetComponent<IDamageable>(out var target))
             {
-                // 콤보 데미지(동작 위력) + 공격력(능력치, 장비 포함)
                 int attackBonus = _stats != null ? _stats.Attack : 0;
+                int amount = _currentDamage + attackBonus;
 
                 var info = new DamageInfo
                 {
-                    Amount = _currentDamage + attackBonus,
+                    Amount = amount,
                     Source = gameObject,
                     HitPoint = hit.ClosestPoint(_hitOrigin.position)
                 };
 
                 target.TakeDamage(info);
                 hitAny = true;
+                if (amount >= shakeThreshold) bigHit = true;
             }
         }
 
-        // 적을 1마리 이상 맞췄을 때만 히트스톱 (헛스윙엔 없음)
         if (hitAny)
+        {
+            var am = AudioManager.Instance;
+            am?.PlaySound(am.Library.SwordImpact);
+        }
+        // 큰 적중만 연출 (히트스톱 + 셰이크 함께) - 약한/빠른 타엔 멈칫거림 없음
+        if (bigHit)
         {
             HitStopManager.Instance?.Trigger();
             CameraShakeManager.Instance?.Shake();
         }
+    }
+
+    /// <summary>공격 휘두름 효과음. AttackState 가 공격 시작 시 호출 (헛스윙 포함).</summary>
+    public void PlaySwing()
+    {
+        var am = AudioManager.Instance;
+        am?.PlaySound(am.Library.SwordSwing);
     }
 
     // ========================================================================

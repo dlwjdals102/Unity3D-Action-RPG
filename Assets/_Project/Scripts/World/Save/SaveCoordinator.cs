@@ -149,7 +149,5 @@ public class SaveCoordinator : MonoBehaviour
                     data.soulDropAmount);
             }
         }
-
-        Debug.Log("[SaveCoordinator] 로드 적용 완료");
     }
 }

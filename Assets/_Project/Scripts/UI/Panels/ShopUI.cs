@@ -105,15 +105,8 @@ public class ShopUI : MonoBehaviour
     {
         if (item == null || _souls == null || _inventory == null) return;
 
-        if (_souls.TrySpend(item.Price))
-        {
+        if (_souls.TrySpend(item.Price)) 
             _inventory.AddItem(item, 1);
-            Debug.Log($"[상점] 구매: {item.DisplayName} (-{item.Price} 영혼)");
-        }
-        else
-        {
-            Debug.Log($"[상점] 영혼 부족: {item.DisplayName} ({item.Price} 필요)");
-        }
     }
 
     /// <summary>내 인벤토리를 판매 슬롯 UI에 매핑 (InventoryUI.Refresh 와 동일 패턴).</summary>
@@ -138,7 +131,6 @@ public class ShopUI : MonoBehaviour
         int sellPrice = Mathf.RoundToInt(item.Price * _sellRatio);
         _inventory.RemoveItem(item, 1);
         _souls.Add(sellPrice);
-        Debug.Log($"[상점] 판매: {item.DisplayName} (+{sellPrice} 영혼)");
         // 목록 갱신은 OnInventoryChanged → RefreshSell 로 자동
     }
 }

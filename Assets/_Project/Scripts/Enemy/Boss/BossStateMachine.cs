@@ -126,6 +126,8 @@ public class BossStateMachine : EnemyStateMachineBase
 
     public override bool CanBeParried => false;  // 보스는 플레이어 패리에 경직 안 됨
 
+    public override bool ParticipatesInRespawn => false;   // 보스는 휴식으로 부활 안 함
+
     // === 페이즈 전환 (HP 임계 이하 → 페이즈2, 1회) ===
     private void CheckPhaseTransition()
     {

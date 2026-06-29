@@ -112,4 +112,17 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
     {
         _playerAttacker?.PerformHit();
     }
+
+    /// <summary>공격 휘두르는 프레임에 호출 (스윙 효과음). 애니메이션 이벤트.</summary>
+    public void OnSwing()
+    {
+        _playerAttacker?.PlaySwing();
+    }
+
+    /// <summary>발이 땅에 닿는 프레임에 호출 (발소리). 애니메이션 이벤트.</summary>
+    public void OnFootstep()
+    {
+        var am = AudioManager.Instance;
+        am?.PlaySound(am.Library.Footstep);
+    }
 }

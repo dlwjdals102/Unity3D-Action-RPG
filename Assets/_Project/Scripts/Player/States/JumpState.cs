@@ -14,7 +14,6 @@ public class JumpState : PlayerStateBase
 
     public override void OnEnter()
     {
-        Debug.Log("[JumpState] OnEnter");
         // 점프 발동: 수직 속도 설정 + 애니메이션 재생
         _stateMachine.Movement.Jump();
         _stateMachine.Animator.PlayJump();

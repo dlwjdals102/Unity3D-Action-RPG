@@ -32,25 +32,18 @@ public class EnemyRespawnManager : MonoBehaviour
         _enemies.AddRange(found);
     }
 
-    /// <summary>
-    /// 모든 적을 초기 상태로 (화톳불 휴식 시 호출).
-    /// </summary>
+    /// <summary> 모든 적을 초기 상태로 (화톳불 휴식 시 호출). </summary>
     public void RespawnAll()
     {
         foreach (var enemy in _enemies)
         {
-            if (enemy != null)
-            {
-                enemy.ResetToInitial();
-            }
+            if (enemy == null) continue;
+            if (!enemy.ParticipatesInRespawn) continue;   // ← 보스 제외
+            enemy.ResetToInitial();
         }
-
-        Debug.Log($"[EnemyRespawn] {_enemies.Count}마리 리스폰");
     }
 
-    /// <summary>
-    /// 전투 중(IsInCombat)인 적이 하나라도 있는지. 화톳불 휴식 가능 판단에 사용.
-    /// </summary>
+    /// <summary> 전투 중(IsInCombat)인 적이 하나라도 있는지. 화톳불 휴식 가능 판단에 사용. </summary>
     public bool AnyEnemyInCombat()
     {
         foreach (var enemy in _enemies)

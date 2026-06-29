@@ -36,9 +36,26 @@ public class PlayerStateMachine : MonoBehaviour
     // === Current State ===
     public PlayerStateBase CurrentState { get; private set; }
 
-    /// <summary>가드 가능 여부. 방패를 착용한 경우에만 가드할 수 있다 (장비 연동).</summary>
+    // === Guard Break 재진입 락 ===
+    [Header("Guard")]
+    [Tooltip("가드 브레이크 후 가드를 다시 잡을 수 없는 시간(초)")]
+    [SerializeField] private float _guardBreakLockTime = 0.8f;
+    private float _guardBreakUntil;   // 이 시각까지 가드 재진입 차단
+
+    /// <summary>가드 가능 여부. 방패 착용 + 브레이크 락이 풀린 경우에만 가드 가능.</summary>
     public bool CanGuard =>
+        Time.time >= _guardBreakUntil &&
         Equipment != null && Equipment.GetEquipped(EquipmentSlot.Shield) != null;
+
+    /// <summary>가드 브레이크 발생 시 호출 - 일정 시간 가드 재진입을 막는다.</summary>
+    public void NotifyGuardBreak()
+    {
+        _guardBreakUntil = Time.time + _guardBreakLockTime;
+    }
+
+    /// <summary>무기 착용 여부. 맨손이면 검 콤보 대신 발차기. (CanGuard 와 대칭)</summary>
+    public bool HasWeapon =>
+        Equipment != null && Equipment.GetEquipped(EquipmentSlot.Weapon) != null;
 
     private void Awake()
     {

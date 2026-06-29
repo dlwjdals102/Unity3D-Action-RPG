@@ -11,22 +11,25 @@ using UnityEngine;
 public class AttackState : PlayerStateBase
 {
     private const float MoveInputThreshold = 0.01f;
-    private const int MaxComboIndex = 2;  // 0, 1, 2 (1타, 2타, 3타)
+    private const int MaxComboIndex = 1;  // 0, 1, /*2 (1타, 2타, 3타)*/
 
     private int _comboIndex;
     private bool _comboQueued;
+
+    private bool _isUnarmed;   // 이번 공격이 맨손(킥)인가
 
     public AttackState(PlayerStateMachine stateMachine) : base(stateMachine) { }
 
     public override void OnEnter()
     {
-        // 콤보 초기화 (인스턴스 재사용 안전)
         _comboIndex = 0;
         _comboQueued = false;
+        _isUnarmed = !_stateMachine.HasWeapon;
 
-        // 1타 데미지 설정 후 애니메이션 재생
-        // (1타 스태미나 소모는 진입 측 (IdleState/MoveState/LandState) 의 분기에서 이미 처리됨)
-        StartCombo(_comboIndex);
+        if (_isUnarmed)
+            StartKick();          // 맨손 → 발차기 단발
+        else
+            StartCombo(_comboIndex);   // 무기 → 검 콤보 (기존)
     }
 
     public override void OnUpdate()
@@ -38,6 +41,14 @@ public class AttackState : PlayerStateBase
             _stateMachine.Stamina.TryConsume(_stateMachine.Movement.DodgeStaminaCost))
         {
             _stateMachine.ChangeState(_stateMachine.DodgeState);
+            return;
+        }
+
+        // 맨손(킥): 콤보 체인 없음 - 끝나면 종료
+        if (_isUnarmed)
+        {
+            if (_stateMachine.Animator.IsAttackFinished)
+                ExitToIdleOrMove();
             return;
         }
 
@@ -85,6 +96,12 @@ public class AttackState : PlayerStateBase
     {
         _stateMachine.Attacker.SetCurrentCombo(comboIndex);
         _stateMachine.Animator.PlayAttack(comboIndex);
+    }
+
+    private void StartKick()
+    {
+        _stateMachine.Attacker.SetUnarmedAttack();
+        _stateMachine.Animator.PlayKick();
     }
 
     /// <summary>

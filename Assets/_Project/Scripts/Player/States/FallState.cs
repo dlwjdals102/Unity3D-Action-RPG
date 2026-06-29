@@ -14,7 +14,6 @@ public class FallState : PlayerStateBase
 
     public override void OnEnter()
     {
-        Debug.Log("[FallState] OnEnter");
         // Fall 애니메이션 재생 (코드가 명시적 트리거)
         _stateMachine.Animator.PlayFall();
     }

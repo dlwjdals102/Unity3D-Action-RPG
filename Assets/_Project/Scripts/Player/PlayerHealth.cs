@@ -41,6 +41,9 @@ public class PlayerHealth : MonoBehaviour, IDamageable
     /// <summary>사망 시 1회 발행 (상태머신의 DeathState 전환 + 리스폰 시스템이 구독).</summary>
     public event Action OnDeath;
 
+    /// <summary>실제 데미지 적용 시 발행(데미지 양). 피격 피드백(비네트 등)이 구독.</summary>
+    public event Action<int> OnDamaged;
+
     // === Public Properties ===
     public int CurrentHealth => _currentHealth;
     public int MaxHealth => _stats != null ? _stats.MaxHealth : 100;
@@ -95,7 +98,10 @@ public class PlayerHealth : MonoBehaviour, IDamageable
 
                 if (attacker != null && attacker.CanBeParried)
                 {
-                    Debug.Log("[패리] 성공!");
+                    DamageTextManager.Instance?.SpawnText(
+                        "Parry!",
+                        transform.position + Vector3.up * _damageTextHeight,
+                        new Color(1f, 0.85f, 0.2f));   // 금색 - 임팩트
                     attacker.EnterParriedStun(_parryStunDuration);
                     return;  // 데미지 0
                 }
@@ -107,12 +113,16 @@ public class PlayerHealth : MonoBehaviour, IDamageable
             if (_stamina != null && _stamina.TryConsume(_guardStaminaCostPerHit))
             {
                 int guarded = Mathf.Max(1, Mathf.RoundToInt(info.Amount * (1f - _guardDamageReduction)));
-                ApplyDamage(guarded);
+                ApplyDamage(guarded, showNumber: false);   // 칩댐 적용하되 숫자는 숨김
+                DamageTextManager.Instance?.SpawnText(
+                    "Guard",
+                    transform.position + Vector3.up * _damageTextHeight,
+                    new Color(0.5f, 0.8f, 1f));   // 청색 - 방어
                 return;
             }
 
             // 3. 스태미나 부족: 가드 브레이크 (가드 풀리고 아래 일반 피격으로)
-            Debug.Log("[가드] 브레이크! (스태미나 부족)");
+            _stateMachine.NotifyGuardBreak();
             _stateMachine.ChangeState(_stateMachine.IdleState);
         }
 
@@ -120,23 +130,32 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         int defense = _playerStats != null ? _playerStats.Defense : 0;
         int finalDamage = Mathf.Max(1, info.Amount - defense);
 
+        // 피격 타격감: 큰 피격만 화면 흔들림 (잔타·칩댐은 비네트가 담당 → 멀미 방지)
+        const int shakeThreshold = 40;   // 이 미만 데미지는 셰이크 생략
+        if (finalDamage >= shakeThreshold)
+        {
+            CameraShakeManager.Instance?.Shake();
+        }
+
         ApplyDamage(finalDamage);
     }
 
     /// <summary>실제 데미지 적용 + 공통 후처리 (HUD/텍스트/사망). 가드/일반 피격이 공용.</summary>
-    private void ApplyDamage(int damage)
+    private void ApplyDamage(int damage, bool showNumber = true)
     {
         _currentHealth -= damage;
         if (_currentHealth < 0) _currentHealth = 0;
 
-        // 체력 변경 알림 (HUD 갱신)
         OnHealthChanged?.Invoke(_currentHealth, MaxHealth);
+        OnDamaged?.Invoke(damage);
 
-        // 머리 위에 데미지 텍스트 생성
-        Vector3 textPosition = transform.position + Vector3.up * _damageTextHeight;
-        DamageTextManager.Instance?.Spawn(damage, textPosition);
+        // 데미지 숫자 (가드처럼 "Guard" 텍스트로 대체할 땐 숨김)
+        if (showNumber)
+        {
+            Vector3 textPosition = transform.position + Vector3.up * _damageTextHeight;
+            DamageTextManager.Instance?.Spawn(damage, textPosition);
+        }
 
-        // 사망 처리: 이벤트 발행 (상태머신이 DeathState 전환, 리스폰 시스템이 부활 처리)
         if (IsDead)
         {
             OnDeath?.Invoke();

@@ -5,7 +5,7 @@ using UnityEngine;
 /// 휴식 시 이 화톳불 위치를 체크포인트로 등록 (BonfireManager).
 /// 
 /// 트리거 범위 진입/이탈을 OnTriggerEnter/Exit 로 감지하고, 범위 안일 때만 F 입력을 처리한다.
-/// (회복/적 리스폰은 휴식 시 추가 연결 예정 - [D][E])
+/// (회복/적 리스폰은 휴식 시 처리)
 /// 
 /// 필요: 이 오브젝트에 Trigger 로 설정된 Collider, 플레이어에 "Player" 태그.
 /// </summary>
@@ -14,6 +14,9 @@ public class Bonfire : MonoBehaviour
     [Header("Interaction")]
     [Tooltip("상호작용 가능 거리 표시용 (실제 감지는 Trigger Collider)")]
     [SerializeField] private Transform _restPoint;  // 휴식 시 리스폰될 지점 (비우면 자기 위치)
+
+    [Tooltip("범위 진입 시 표시할 월드 프롬프트 ([F] 휴식 라벨)")]
+    [SerializeField] private GameObject _promptObject;
 
     private PlayerController _playerInRange;  // 범위 안 플레이어 (없으면 null)
 
@@ -32,7 +35,7 @@ public class Bonfire : MonoBehaviour
         if (controller != null)
         {
             _playerInRange = controller;
-            Debug.Log("[Bonfire] 휴식 가능 (F)");  // 임시 - 추후 UI 프롬프트로
+            if (_promptObject != null) _promptObject.SetActive(true);
         }
     }
 
@@ -42,6 +45,7 @@ public class Bonfire : MonoBehaviour
         if (controller != null && controller == _playerInRange)
         {
             _playerInRange = null;
+            if (_promptObject != null) _promptObject.SetActive(false);
         }
     }
 
@@ -56,7 +60,6 @@ public class Bonfire : MonoBehaviour
             if (EnemyRespawnManager.Instance != null &&
                 EnemyRespawnManager.Instance.AnyEnemyInCombat())
             {
-                Debug.Log("[Bonfire] 전투 중에는 휴식할 수 없습니다.");
                 return;
             }
 
@@ -64,7 +67,7 @@ public class Bonfire : MonoBehaviour
         }
     }
 
-    /// <summary>휴식: 체크포인트 등록. (회복/적 리스폰은 [D][E]에서 추가)</summary>
+    /// <summary>휴식: 체크포인트 등록.</summary>
     private void Rest()
     {
         Vector3 restPos = _restPoint != null ? _restPoint.position : transform.position;
@@ -90,7 +93,5 @@ public class Bonfire : MonoBehaviour
         {
             _saveCoordinator.SaveGame();
         }
-
-        Debug.Log("[Bonfire] 휴식: 회복 + 적 리스폰 + 체크포인트 + 저장.");
     }
 }

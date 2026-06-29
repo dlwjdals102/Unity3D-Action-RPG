@@ -15,6 +15,9 @@ public class Shopkeeper : MonoBehaviour
     [Tooltip("이 상인의 판매 목록")]
     [SerializeField] private ShopData _shopData;
 
+    [Tooltip("범위 진입 시 표시할 월드 프롬프트 ([F] 상점 라벨)")]
+    [SerializeField] private GameObject _promptObject;
+
     private PlayerController _playerInRange;
     private bool _isOpen;
 
@@ -24,7 +27,7 @@ public class Shopkeeper : MonoBehaviour
         if (controller != null)
         {
             _playerInRange = controller;
-            Debug.Log("[상점] 상호작용 가능 (F)");
+            if (_promptObject != null) _promptObject.SetActive(true);
         }
     }
 
@@ -34,6 +37,7 @@ public class Shopkeeper : MonoBehaviour
         if (controller != null && controller == _playerInRange)
         {
             _playerInRange = null;
+            if (_promptObject != null) _promptObject.SetActive(false);
 
             // 범위 벗어나면 상점 닫기
             if (_isOpen) CloseShop();
@@ -43,13 +47,6 @@ public class Shopkeeper : MonoBehaviour
     private void Update()
     {
         if (_playerInRange == null) return;
-
-        // ESC: 열려 있으면 닫기 (상점 열림 상태는 Shopkeeper 가 소유 → 여기서 닫아야 동기화)
-        /*if (_isOpen && _playerInRange.CancelRequested)
-        {
-            CloseShop();
-            return;
-        }*/
 
         // 상점 열린 상태에서 ESC → 닫기 (소비형: Pause 등과 안 겹침)
         if (_isOpen && _playerInRange.ConsumeCancel())
