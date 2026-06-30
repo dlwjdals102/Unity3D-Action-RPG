@@ -154,6 +154,9 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         {
             Vector3 textPosition = transform.position + Vector3.up * _damageTextHeight;
             DamageTextManager.Instance?.Spawn(damage, textPosition);
+
+            var am = AudioManager.Instance;
+            am?.PlaySound(am.Library.PlayerHurt);     // 풀히트만
         }
 
         if (IsDead)

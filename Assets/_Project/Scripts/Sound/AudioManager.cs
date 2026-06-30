@@ -29,6 +29,7 @@ public class AudioManager : MonoBehaviour
             return;
         }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
 
         _voices = new AudioSource[_voiceCount];
         for (int i = 0; i < _voiceCount; i++)

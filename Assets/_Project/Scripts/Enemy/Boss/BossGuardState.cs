@@ -31,6 +31,7 @@ public class BossGuardState : EnemyStateBase
 
         _health?.SetBlocking(true);          // 이 순간부터 피격 무효 + 기록
         _stateMachine.Animator.PlayGuard();  // 막기 스탠스 (1회 재생, 끝에 OnAttackAnimationEnd)
+        _boss.WeaponVisual?.ShowShield();
     }
 
     public override void OnUpdate()
@@ -53,5 +54,6 @@ public class BossGuardState : EnemyStateBase
     public override void OnExit()
     {
         _health?.SetBlocking(false);   // 모든 이탈(반격/복귀/사망)에서 가드 해제 보장
+        _boss.WeaponVisual?.HideAll();
     }
 }

@@ -18,5 +18,8 @@ public class BossSlashState : BossMeleeAttackStateBase
     protected override float RecoveryTime => _config != null ? _config.SlashRecoveryTime : 0.8f;
 
     // 고유 동작 자리:
-    // protected override void OnAttackUpdate() { /* 휘두르며 전진 등 */ }
+    protected override void OnAttackStart()
+    {
+        _boss.WeaponVisual?.ShowSword();
+    }
 }

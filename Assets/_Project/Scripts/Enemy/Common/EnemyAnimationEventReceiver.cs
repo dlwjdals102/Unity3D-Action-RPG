@@ -52,6 +52,9 @@ public class EnemyAnimationEventReceiver : MonoBehaviour
     public void OnAttackHit()
     {
         _attacker?.PerformHit();
+
+        var am = AudioManager.Instance;
+        am?.PlaySound(am.Library.EnemyAttack);        // 적 공격음
     }
 
     /// <summary>
@@ -71,5 +74,8 @@ public class EnemyAnimationEventReceiver : MonoBehaviour
     public void OnBowRelease()
     {
         (_attacker as BossAttacker)?.FireArrow();
+
+        var am = AudioManager.Instance;
+        am?.PlaySound(am.Library.EnemyAttack);        // 적 공격음
     }
 }

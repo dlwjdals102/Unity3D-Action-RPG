@@ -33,6 +33,7 @@ public class BossBowState : EnemyStateBase
 
         // 드로우 클립 재생 (OnBowRelease 이벤트가 발사, OnAttackAnimationEnd 가 종료)
         _stateMachine.Animator.PlayBow();
+        _boss.WeaponVisual?.ShowBow();
     }
 
     public override void OnUpdate()
@@ -43,5 +44,10 @@ public class BossBowState : EnemyStateBase
             _boss.StartBowCooldown();
             _boss.ToRecovery(_config != null ? _config.BowRecoveryTime : 0.6f);
         }
+    }
+
+    public override void OnExit()
+    {
+        _boss.WeaponVisual?.HideAll();
     }
 }

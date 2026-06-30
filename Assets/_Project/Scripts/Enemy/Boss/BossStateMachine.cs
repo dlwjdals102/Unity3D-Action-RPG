@@ -17,6 +17,12 @@ public class BossStateMachine : EnemyStateMachineBase
     public BossGuardState GuardState { get; private set; }
     public EnemyDeathState DeathState { get; private set; }
 
+    // === WeaponVisual ===
+    private BossWeaponVisual _weaponVisual;
+    /// <summary>동작별 무기 비주얼(검/활/방패 토글). 상태가 OnEnter/OnExit 에서 사용.</summary>
+    public BossWeaponVisual WeaponVisual =>
+        _weaponVisual != null ? _weaponVisual : (_weaponVisual = GetComponent<BossWeaponVisual>());
+
     // === 페이즈 ===
     private BossConfig _bossConfig;
     private int _currentPhase = 1;

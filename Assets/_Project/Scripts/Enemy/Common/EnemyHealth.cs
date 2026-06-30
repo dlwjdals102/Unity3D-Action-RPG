@@ -78,10 +78,14 @@ public class EnemyHealth : MonoBehaviour, IDamageable
         {
             GrantSouls();  // 처치 보상 영혼 지급
             OnDeath?.Invoke();
+            var am = AudioManager.Instance;
+            am?.PlaySound(am.Library.EnemyDeath);
         }
         else
         {
             OnDamaged?.Invoke();
+            var am = AudioManager.Instance;
+            am?.PlaySound(am.Library.EnemyHurt);      // 피격음
         }
     }
 

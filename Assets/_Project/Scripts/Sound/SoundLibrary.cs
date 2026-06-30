@@ -17,6 +17,7 @@ public class SoundLibrary : ScriptableObject
     public SoundDefinition PlayerHurt;
 
     [Header("Combat - Enemy")]
+    public SoundDefinition EnemyAttack;
     public SoundDefinition EnemyHurt;
     public SoundDefinition EnemyDeath;
 

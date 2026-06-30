@@ -53,6 +53,11 @@ public abstract class BossMeleeAttackStateBase : EnemyStateBase
         }
     }
 
+    public override void OnExit()
+    {
+        _boss.WeaponVisual?.HideAll();
+    }
+
     // === 패턴 고유 훅 (옵션 오버라이드) ===
     protected virtual void OnAttackStart() { }
     protected virtual void OnAttackUpdate() { }
