@@ -12,6 +12,9 @@ public class StatsUI : MonoBehaviour
     [Tooltip("공격력 텍스트")]
     [SerializeField] private TextMeshProUGUI _attackText;
 
+    [Tooltip("무기 데미지 텍스트")]
+    [SerializeField] private TextMeshProUGUI _weaponDamageText;
+
     [Tooltip("방어력 텍스트")]
     [SerializeField] private TextMeshProUGUI _defenseText;
 
@@ -31,6 +34,8 @@ public class StatsUI : MonoBehaviour
         if (_stats == null) return;
 
         if (_attackText != null) _attackText.text = $"Attack: {_stats.Attack}";
+        if (_weaponDamageText != null) _weaponDamageText.text = $"Weapon: {_stats.WeaponDamage}";
         if (_defenseText != null) _defenseText.text = $"Defense: {_stats.Defense}";
+
     }
 }

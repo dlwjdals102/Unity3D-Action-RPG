@@ -28,6 +28,17 @@ public class PlayerStats : MonoBehaviour
         }
     }
 
+    /// <summary>장착 무기의 기본 데미지. 무기 없으면 0.</summary>
+    public int WeaponDamage
+    {
+        get
+        {
+            if (_equipment == null) return 0;
+            var weapon = _equipment.GetEquipped(EquipmentSlot.Weapon);
+            return weapon != null ? weapon.WeaponDamage : 0;
+        }
+    }
+
     /// <summary>최종 방어력 = 기본(Config) + 장비 보정.</summary>
     public int Defense
     {
