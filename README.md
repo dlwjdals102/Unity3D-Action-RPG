@@ -5,7 +5,8 @@
 <!-- TODO: 대표 이미지 1장 (보스전 장면 추천). docs/screenshot_main.png 로 저장 후 아래 경로 확인 -->
 <!-- ![대표 이미지](docs/screenshot_main.png) -->
 
-C#으로 전투·AI·게임 루프를 직접 설계하고 구현한 3D 소울라이크 액션 게임입니다. 방랑 기사가 되어 죽음과 재도전을 반복하며 보스에 맞섭니다.
+C#으로 전투·AI·게임 루프를 직접 설계하고 구현한 3D 소울라이크 액션 게임입니다.    
+방랑 기사가 되어 죽음과 재도전을 반복하며 보스에 맞섭니다.
 
 ---
 
@@ -21,7 +22,7 @@ C#으로 전투·AI·게임 루프를 직접 설계하고 구현한 3D 소울라
 | 엔진 | Unity 6.3 LTS |
 | 개발 도구 | Visual Studio, Git |
 
-**주요 기술** — FSM, Template Method, Event, ScriptableObject, JSON Save, Object Pool, Cinemachine
+**주요 기술** : FSM, Template Method, Event, ScriptableObject, JSON Save, Object Pool, Cinemachine
 
 ---
 
