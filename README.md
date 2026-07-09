@@ -1,12 +1,11 @@
 # Unity 3D 액션 포트폴리오
 
-> Unity로 제작한 3D 소울라이크 액션 게임 - 개인 포트폴리오 프로젝트
+> Unity로 제작한 3D 소울라이크 액션 게임 — 개인 포트폴리오 프로젝트
 
 <!-- TODO: 대표 이미지 1장 (보스전 장면 추천). docs/screenshot_main.png 로 저장 후 아래 경로 확인 -->
-![대표 이미지](docs/screenshot_main.png)
+<!-- ![대표 이미지](docs/screenshot_main.png) -->
 
-C#으로 전투·AI·게임 루프를 직접 설계하고 구현한 3D 소울라이크 액션 게임입니다.   
-방랑 기사가 되어 죽음과 재도전을 반복하며 보스에 맞섭니다.
+C#으로 전투·AI·게임 루프를 직접 설계하고 구현한 3D 소울라이크 액션 게임입니다. 방랑 기사가 되어 죽음과 재도전을 반복하며 보스에 맞섭니다.
 
 ---
 
@@ -48,16 +47,16 @@ C#으로 전투·AI·게임 루프를 직접 설계하고 구현한 3D 소울라
 
 ## 실행 방법
 
-itch.io에서 플레이할 수 있습니다.
+브라우저에서 바로 플레이할 수 있습니다. (Unity Play)
 
-[itch.io에서 플레이하기](#) <!-- TODO: itch.io 링크 -->
+[브라우저에서 플레이하기](https://play.unity.com/en/games/ed18eeb8-375c-41e9-84f9-12bcb3ea9fc2/unity3d)
 
 ## 상세 문서
 
 설계 의사결정, 시스템 구조, 트러블슈팅 등 자세한 내용은 아래에서 확인하실 수 있습니다.
 
-[프로젝트 상세 (Notion)](#) <!-- TODO: Notion 링크 -->
+[프로젝트 상세 (Notion)](https://cookie-lock-dbc.notion.site/Unity-3D-38f87bfb3960807e8434f2dd49121a0e)
 
 ## 외부 에셋
 
-3D 모델·사운드·애니메이션 등 외부 에셋 출처는 [CREDITS.md](CREDITS.md)를 참고해 주세요.
+3D 모델, 사운드, 애니메이션 등 외부 에셋 출처는 [CREDITS.md](CREDITS.md)를 참고해 주세요.
