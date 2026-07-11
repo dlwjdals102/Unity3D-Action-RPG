@@ -1,6 +1,6 @@
 # Unity 3D 액션 포트폴리오
 
-> Unity로 제작한 3D 소울라이크 액션 게임 — 개인 포트폴리오 프로젝트
+> Unity로 제작한 3D 소울라이크 액션 게임 - 개인 포트폴리오 프로젝트
 
 <!-- TODO: 대표 이미지 1장 (보스전 장면 추천). docs/screenshot_main.png 로 저장 후 아래 경로 확인 -->
 <!-- ![대표 이미지](docs/screenshot_main.png) -->
@@ -22,7 +22,7 @@ C#으로 전투, AI, 게임 루프를 직접 설계하고 구현한 3D 소울라
 | 엔진 | Unity 6.3 LTS |
 | 개발 도구 | Visual Studio, Git |
 
-**주요 기술** — FSM · Template Method · Event · ScriptableObject · JSON Save · Object Pool · Cinemachine
+**주요 기술** : FSM · Template Method · Event · ScriptableObject · JSON Save · Object Pool · Cinemachine
 
 ---
 
@@ -37,14 +37,18 @@ C#으로 전투, AI, 게임 루프를 직접 설계하고 구현한 3D 소울라
 ## 주요 기능
 
 - **전투** : 콤보 공격, 가드, 패리, 회피, 스태미나 관리
-- **적 AI (FSM)** : 근접 / 원거리 / 엘리트 / 보스, 공통 상태 재사용
+- **적 AI (FSM)** : 근접, 원거리, 엘리트, 보스, 공통 상태 재사용
 - **보스전** : 패턴 선택과 반격, 반사 가드, HP 50% 페이즈 전환
 - **소울 루프** : 사망 시 영혼 드랍, 회수, 화톳불 휴식(세이브), 적 리스폰
-- **장비 · 아이템** : 인벤토리 / 상점 / 장비 착용, 이벤트로 능력치, UI, 외형 동기화
+- **장비 · 아이템** : 인벤토리, 상점, 장비 착용, 이벤트로 능력치, UI, 외형 동기화
 - **락온** : 화면 중앙 기준 타겟팅, Cinemachine 카메라 전환
 - **전투 피드백** : 히트스톱, 카메라 셰이크, 히트 플래시, 피격 비네트
 
 ---
+
+## 플레이 영상
+
+[플레이 영상 (YouTube)](https://youtu.be/W6RlcS7ra3M)
 
 ## 실행 방법
 
