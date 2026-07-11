@@ -30,6 +30,9 @@ public class EnemyConfig : ScriptableObject
     [Tooltip("공격 시 적용되는 데미지")]
     [SerializeField] private int _damage = 10;
 
+    [Tooltip("피격 시 데미지에서 차감되는 방어력 (최소 1 데미지는 보장)")]
+    [SerializeField] private int _defense = 0;
+
     [Header("Vision")]
     [Tooltip("시야 감지 거리")]
     [SerializeField] private float _detectionRange = 8f;
@@ -52,6 +55,7 @@ public class EnemyConfig : ScriptableObject
     public float ChaseSpeed => _chaseSpeed;
     public float AttackRange => _attackRange;
     public int Damage => _damage;
+    public int Defense => _defense;
     public float DetectionRange => _detectionRange;
     public float DetectionAngle => _detectionAngle;
     public float GiveUpRange => _giveUpRange;

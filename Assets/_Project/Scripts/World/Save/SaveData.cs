@@ -29,6 +29,9 @@ public class SaveData
     public bool hasSoulDrop;
     public float soulDropX, soulDropY, soulDropZ;
     public int soulDropAmount;
+
+    // 클리어한 보스 ID 목록
+    public List<string> defeatedBosses = new List<string>();
 }
 
 /// <summary>인벤토리 한 칸 저장 (아이템 ID + 개수).</summary>

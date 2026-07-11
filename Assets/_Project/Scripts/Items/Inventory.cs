@@ -39,18 +39,6 @@ public class Inventory : MonoBehaviour
     /// 현재 슬롯 목록 (읽기용).
     /// </summary>
     public IReadOnlyList<InventorySlot> Slots => _slots;
-    
-    // 테스트
-    [Header("테스트용 시작 아이템")]
-    [SerializeField] private List<ItemData> _startingItems = new List<ItemData>();
-
-    private void Start()
-    {
-        foreach (var item in _startingItems)
-        {
-            if (item != null) AddItem(item, 1);
-        }
-    }
 
     /// <summary>
     /// 아이템 추가. 중첩 가능하면 기존 슬롯에 쌓고, 아니면 새 슬롯.

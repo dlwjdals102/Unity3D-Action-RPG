@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 using UnityEngine.InputSystem;
 
 /// <summary>
@@ -16,12 +17,26 @@ public class SaveCoordinator : MonoBehaviour
     [SerializeField] private ItemDatabase _itemDatabase;
     [SerializeField] private PlayerRespawn _playerRespawn;
 
+    // 클리어한 보스 ID 목록 (로드 시 복원, 게임 중 유지). BossGate가 조회/등록.
+    private readonly HashSet<string> _defeatedBosses = new HashSet<string>();
+
+    /// <summary>로드 완료 시 발행. BossGate 등이 밖에서 구독.</summary>
+    public event System.Action OnLoadComplete;
+
+    /// <summary>로드(또는 새 게임 초기화)가 끝났는지. 늦게 구독하는 쪽이 확인용.</summary>
+    public bool LoadCompleted { get; private set; }
+
     private void Start()
     {
         // 게임 시작 시 저장 파일이 있으면 자동 로드 (없으면 새 게임)
         if (SaveManager.Instance != null && SaveManager.Instance.HasSave())
         {
             LoadGame();
+        }
+        else
+        {
+            LoadCompleted = true;
+            OnLoadComplete?.Invoke();
         }
     }
 
@@ -83,6 +98,9 @@ public class SaveCoordinator : MonoBehaviour
             data.soulDropZ = dropPos.z;
             data.soulDropAmount = SoulDropManager.Instance.DropAmount;
         }
+
+        // 클리어한 보스 목록
+        data.defeatedBosses = new List<string>(_defeatedBosses);
 
         // 파일 저장
         if (SaveManager.Instance != null) SaveManager.Instance.Save(data);
@@ -149,5 +167,34 @@ public class SaveCoordinator : MonoBehaviour
                     data.soulDropAmount);
             }
         }
+
+        // 클리어한 보스 목록 복원
+        _defeatedBosses.Clear();
+        if (data.defeatedBosses != null)
+        {
+            foreach (var id in data.defeatedBosses)
+            {
+                if (!string.IsNullOrEmpty(id)) _defeatedBosses.Add(id);
+            }
+        }
+
+        LoadCompleted = true;
+        OnLoadComplete?.Invoke();
     }
+
+    /// <summary>보스 클리어 등록 후 즉시 저장. (BossGate가 보스 사망 시 호출)</summary>
+    public void MarkBossDefeated(string bossId)
+    {
+        if (string.IsNullOrEmpty(bossId)) return;
+        _defeatedBosses.Add(bossId);
+        SaveGame();   // 보스 클리어는 즉시 저장
+    }
+
+    /// <summary>보스가 이미 클리어됐는지. (BossGate가 시작 시 확인)</summary>
+    public bool IsBossDefeated(string bossId)
+    {
+        if (string.IsNullOrEmpty(bossId)) return false;
+        return _defeatedBosses.Contains(bossId);
+    }
+
 }

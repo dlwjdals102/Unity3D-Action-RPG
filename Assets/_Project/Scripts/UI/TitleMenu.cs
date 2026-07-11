@@ -39,9 +39,13 @@ public class TitleMenu : MonoBehaviour
         SceneManager.LoadScene(_gameSceneName);
     }
 
-    /// <summary>게임 종료. (버튼 OnClick 연결)</summary>
+    /// <summary>게임 종료. (버튼 OnClick 연결) WebGL(브라우저)에선 종료가 불가능해 무시한다.</summary>
     public void QuitGame()
     {
-        Application.Quit();  // 에디터에선 동작 안 함 (빌드에서)
+#if UNITY_WEBGL
+        return;  // 브라우저에선 창을 닫을 수 없음 → 멈춤 방지를 위해 무시
+#else
+        Application.Quit();  // 에디터에선 동작 안 함 (빌드에서만)
+#endif
     }
 }

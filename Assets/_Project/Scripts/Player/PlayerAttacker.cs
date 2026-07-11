@@ -16,11 +16,8 @@ public class PlayerAttacker : MonoBehaviour
     [SerializeField] private LayerMask _enemyLayer;
 
     [Header("Combo Damage")]
-    [Tooltip("콤보 단계별 데미지 배율 (무기 데미지 × 배율). 1타, 2타, 3타")]
+    [Tooltip("콤보 단계별 데미지 배율. (기본공격 + 무기 데미지) × 배율. 1타, 2타")]
     [SerializeField] private float[] _comboMultipliers = { 1.0f, 1.3f }; /*1.8f };*/
-
-    [Tooltip("맨손 발차기 데미지")]
-    [SerializeField] private int _kickDamage = 8;
 
     [Header("Combo Stamina Cost")]
     [SerializeField] private float[] _comboStaminaCosts = { 15f, 20f }; /*25f };*/
@@ -55,7 +52,17 @@ public class PlayerAttacker : MonoBehaviour
         }
 
         int weaponDamage = GetEquippedWeaponDamage();
-        _currentDamage = Mathf.RoundToInt(weaponDamage * _comboMultipliers[comboIndex]);
+        _currentDamage = CalculateDamage(weaponDamage, _comboMultipliers[comboIndex]);
+    }
+
+    /// <summary>
+    /// 데미지 계산 공식: (기본공격 + 장비보너스 + 무기위력) × 배율.
+    /// _stats.Attack 이 기본공격 + 장비 공격보너스를 포함한다.
+    /// </summary>
+    private int CalculateDamage(int weaponPower, float multiplier)
+    {
+        int baseAtk = _stats != null ? _stats.Attack : 0;
+        return Mathf.RoundToInt((baseAtk + weaponPower) * multiplier);
     }
 
     /// <summary>현재 장착 무기의 기본 데미지. 무기 없으면 0.</summary>
@@ -69,7 +76,7 @@ public class PlayerAttacker : MonoBehaviour
     /// <summary>맨손 발차기 데미지 설정. PerformHit 가 _currentDamage 를 사용.</summary>
     public void SetUnarmedAttack()
     {
-        _currentDamage = _kickDamage;
+        _currentDamage = CalculateDamage(0, 1.0f);
     }
 
     /// <summary>
@@ -105,8 +112,7 @@ public class PlayerAttacker : MonoBehaviour
         {
             if (hit.TryGetComponent<IDamageable>(out var target))
             {
-                int attackBonus = _stats != null ? _stats.Attack : 0;
-                int amount = _currentDamage + attackBonus;
+                int amount = _currentDamage;
 
                 var info = new DamageInfo
                 {

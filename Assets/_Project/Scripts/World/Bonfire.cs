@@ -67,8 +67,11 @@ public class Bonfire : MonoBehaviour
         }
     }
 
-    /// <summary>휴식: 체크포인트 등록.</summary>
-    private void Rest()
+    /// <summary>
+    /// 이 화톳불을 체크포인트로 등록. (_restPoint 있으면 그 위치, 없으면 화톳불 위치)
+    /// 휴식(Rest) 외에 보스 클리어 등 외부에서도 호출한다.
+    /// </summary>
+    public void RegisterAsCheckpoint()
     {
         Vector3 restPos = _restPoint != null ? _restPoint.position : transform.position;
         Quaternion restRot = _restPoint != null ? _restPoint.rotation : transform.rotation;
@@ -77,6 +80,12 @@ public class Bonfire : MonoBehaviour
         {
             BonfireManager.Instance.SetCheckpoint(restPos, restRot);
         }
+    }
+
+    /// <summary>휴식: 체크포인트 등록.</summary>
+    private void Rest()
+    {
+        RegisterAsCheckpoint();
 
         // 휴식 시 체력 완전 회복
         var health = _playerInRange.GetComponent<PlayerHealth>();

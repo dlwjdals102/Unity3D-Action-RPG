@@ -212,19 +212,4 @@ public class PlayerHealth : MonoBehaviour, IDamageable
         _currentHealth = MaxHealth;
         OnHealthChanged?.Invoke(_currentHealth, MaxHealth);
     }
-
-    // 임시 테스트용: K 키로 즉사. 리스폰 검증 후 제거.
-    private void Update()
-    {
-        if (Keyboard.current != null && Keyboard.current.kKey.wasPressedThisFrame)
-        {
-            var info = new DamageInfo
-            {
-                Amount = 50,
-                Source = gameObject,
-                HitPoint = transform.position
-            };
-            TakeDamage(info);
-        }
-    }
 }

@@ -66,12 +66,14 @@ public class EnemyHealth : MonoBehaviour, IDamageable
             return;
         }
 
-        _currentHealth -= info.Amount;
+        int defense = _config != null ? _config.Defense : 0;
+        int finalDamage = Mathf.Max(1, info.Amount - defense);
+        _currentHealth -= finalDamage;
         if (_currentHealth < 0) _currentHealth = 0;
 
         // 머리 위에 데미지 텍스트 생성
         Vector3 textPosition = transform.position + Vector3.up * _damageTextHeight;
-        DamageTextManager.Instance?.Spawn(info.Amount, textPosition);
+        DamageTextManager.Instance?.Spawn(finalDamage, textPosition);
 
         // 사망 vs 피격 분기: 사망 시 OnDeath, 아니면 OnDamaged
         if (IsDead)

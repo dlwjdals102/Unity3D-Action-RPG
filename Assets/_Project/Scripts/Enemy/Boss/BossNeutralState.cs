@@ -19,6 +19,7 @@ public class BossNeutralState : EnemyStateBase
     {
         // 근접 사거리에서 멈춤 (행동 결정은 OnUpdate). 스포크 추가 시 거리별 분기.
         _stateMachine.Movement.SetStoppingDistance(_stateMachine.AttackRange);
+        _stateMachine.Animator.PlayLocomotion();
     }
 
     public override void OnUpdate()
